@@ -11,7 +11,7 @@
                 <div class="relative">
                     <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full pr-10" required>
                     <button type="button" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
+                            class="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer transition-all duration-150 hover:bg-muted rounded-md p-1"
                             (mousedown)="showPassword($event)"
                             (mouseup)="hidePassword($event)"
                             (mouseleave)="hidePassword($event)"
@@ -39,7 +39,7 @@
                     <a href="/password-recovery" class="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline hover:cursor-pointer transition-all duration-150">¿Olvidaste tu contraseña?</a>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-[#FEF4E4] text-foreground rounded-md py-2 px-2 mt-4 cursor-pointer font-medium">Iniciar sesión</button>
+            <button type="submit" class="w-full bg-[#FDE3BA] hover:bg-[#FBD18E] transition-all duration-150 text-foreground rounded-md py-2 px-2 mt-4 cursor-pointer font-medium">Iniciar sesión</button>
         </form>
         
         <div class="text-xs font-medium text-muted-foreground">

@@ -1,27 +1,33 @@
-<div class="register-container">
-    <div class="register-form">
-        <h2>Register</h2>
-        <form>
-            <div class="form-group">
-                <label for="name">Full Name:</label>
-                <input type="text" id="name" name="name" required>
+<div class="w-full min-h-screen flex items-center justify-center">
+    <div class="min-w-lg border shadow-sm rounded-lg p-8 py-12 bg-white flex flex-col items-center justify-center gap-8">
+        <h1 class="text-3xl font-bold text-pretty">Registrarse en Kairo</h1>
+        <form class="w-full flex flex-col items-start justify-center gap-4">
+            <div class="w-full flex items-center justify-between gap-8">
+                <div class="grid grid-rows-2 gap-0.5 w-full">
+                    <label for="name" class="text-sm font-medium self-end">Nombre</label>
+                    <input type="text" id="name" name="name" class="border rounded-md py-1 px-2 w-full" required>
+                </div>
+                <div class="grid grid-rows-2 gap-0.5 w-full">
+                    <label for="lastname" class="text-sm font-medium self-end">Apellido</label>
+                    <input type="text" id="lastname" name="lastname" class="border rounded-md py-1 px-2 w-full" required>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="email" class="text-sm font-medium self-end">Correo electrónico</label>
+                <input type="email" id="email" name="email" class="border rounded-md py-1 px-2 w-full" required>
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="password" class="text-sm font-medium self-end">Contraseña</label>
+                <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full" required>
             </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="confirmPassword" class="text-sm font-medium self-end">Confirmar contraseña</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="border rounded-md py-1 px-2 w-full" required>
             </div>
-            <button type="submit" class="register-btn">Register</button>
+            <button type="submit" class="w-full bg-[#FEF4E4] text-foreground rounded-md py-2 px-2 mt-4 cursor-pointer">Registrarse</button>
         </form>
-        <div class="login-link">
-            <p>Already have an account? <a routerLink="/login">Login here</a></p>
+        <div class="text-xs font-medium text-muted-foreground">
+            <p>¿Ya tienes una cuenta? <a href="/login" class="text-blue-500 hover:text-blue-600 hover:underline hover:cursor-pointer transition-all duration-150">Iniciar sesión aquí</a></p>
         </div>
     </div>
 </div>

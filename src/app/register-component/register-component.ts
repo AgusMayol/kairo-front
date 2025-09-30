@@ -10,6 +10,19 @@ export class RegisterComponent {
   isPasswordVisible: boolean = false;
   isConfirmPasswordVisible: boolean = false;
   
+  togglePassword(): void {
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    if (passwordInput) {
+      if (this.isPasswordVisible) {
+        passwordInput.type = 'password';
+        this.isPasswordVisible = false;
+      } else {
+        passwordInput.type = 'text';
+        this.isPasswordVisible = true;
+      }
+    }
+  }
+  
   showPassword(event: Event): void {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
     if (passwordInput) {
@@ -27,6 +40,18 @@ export class RegisterComponent {
   }
 
 
+  toggleConfirmPassword(): void {
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    if (passwordInput) {
+      if (this.isConfirmPasswordVisible) {
+        passwordInput.type = 'password';
+        this.isConfirmPasswordVisible = false;
+      } else {
+        passwordInput.type = 'text';
+        this.isConfirmPasswordVisible = true;
+      }
+    }
+  }
 
   showConfirmPassword(event: Event): void {
     const passwordInput = document.getElementById('confirmPassword') as HTMLInputElement;

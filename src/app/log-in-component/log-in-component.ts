@@ -7,5 +7,22 @@ import { Component } from '@angular/core';
   styleUrl: './log-in-component.css'
 })
 export class LogInComponent {
+  
+  isPasswordVisible: boolean = false;
+  
+  showPassword(event: Event): void {
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.type = 'text';
+      this.isPasswordVisible = true;
+    }
+  }
 
+  hidePassword(event: Event): void {
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.type = 'password';
+      this.isPasswordVisible = false;
+    }
+  }
 }

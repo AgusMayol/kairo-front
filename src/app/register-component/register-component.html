@@ -18,13 +18,66 @@
             </div>
             <div class="grid grid-rows-2 gap-0.5 w-full">
                 <label for="password" class="text-sm font-medium self-end">Contraseña</label>
-                <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full" required>
+                <div class="relative">
+                    <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full pr-10" required>
+                    <button type="button" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
+                            (mousedown)="showPassword($event)"
+                            (mouseup)="hidePassword($event)"
+                            (mouseleave)="hidePassword($event)"
+                            aria-label="Mostrar contraseña">
+                        <!-- Ojo normal (cuando la contraseña está oculta) -->
+                        @if (!isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        }
+                        <!-- Ojo tachado (cuando la contraseña está visible) -->
+                        @if (isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Ojo completo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <!-- Barra diagonal tachando el ojo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                            </svg>
+                        }
+                    </button>
+                </div>
             </div>
+
             <div class="grid grid-rows-2 gap-0.5 w-full">
-                <label for="confirmPassword" class="text-sm font-medium self-end">Confirmar contraseña</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" class="border rounded-md py-1 px-2 w-full" required>
+                <label for="password" class="text-sm font-medium self-end">Confirmar contraseña</label>
+                <div class="relative">
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="border rounded-md py-1 px-2 w-full pr-10" required>
+                    <button type="button" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
+                            (mousedown)="showConfirmPassword($event)"
+                            (mouseup)="hideConfirmPassword($event)"
+                            (mouseleave)="hideConfirmPassword($event)"
+                            aria-label="Mostrar contraseña">
+                        <!-- Ojo normal (cuando la contraseña está oculta) -->
+                        @if (!isConfirmPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        }
+                        <!-- Ojo tachado (cuando la contraseña está visible) -->
+                        @if (isConfirmPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Ojo completo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <!-- Barra diagonal tachando el ojo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                            </svg>
+                        }
+                    </button>
+                </div>
             </div>
-            <button type="submit" class="w-full bg-[#FEF4E4] text-foreground rounded-md py-2 px-2 mt-4 cursor-pointer">Registrarse</button>
+            <button type="submit" class="w-full bg-[#FEF4E4] text-foreground rounded-md py-2 px-2 mt-4 cursor-pointer font-medium">Registrarse</button>
         </form>
         <div class="text-xs font-medium text-muted-foreground">
             <p>¿Ya tienes una cuenta? <a href="/login" class="text-blue-500 hover:text-blue-600 hover:underline hover:cursor-pointer transition-all duration-150">Iniciar sesión aquí</a></p>

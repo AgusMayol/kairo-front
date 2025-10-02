@@ -1,5 +1,6 @@
 <div class="px-6 w-full min-h-screen flex items-center justify-center">
     <div class="lg:min-w-lg max-w-sm border shadow-sm rounded-lg p-8 py-12 bg-white flex flex-col items-center justify-center gap-8">
-        <h1 class="text-3xl font-bold text-pretty text-center">¡Bienvenido a Kairo!</h1>
+        <h1 class="text-3xl font-bold text-pretty text-center">¡Bienvenido a Kairo, {{ userName }}!</h1>
+        <button (click)="logout()" class="w-full h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-md shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Cerrar sesión</button>
     </div>
 </div>

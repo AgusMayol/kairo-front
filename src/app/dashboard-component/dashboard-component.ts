@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { getSessionUser, clearSessionCookie } from '../auth.util';
 
 @Component({
   selector: 'app-dashboard-component',
@@ -7,5 +8,15 @@ import { Component } from '@angular/core';
   styleUrl: './dashboard-component.css'
 })
 export class DashboardComponent {
-  
+  userName: string = '';
+
+  constructor() {
+    const user = getSessionUser();
+    this.userName = user ? user.firstName : '';
+  }
+
+  logout(): void {
+    clearSessionCookie();
+    window.location.href = '/login';
+  }
 }

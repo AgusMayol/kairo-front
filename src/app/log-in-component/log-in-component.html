@@ -1,23 +1,74 @@
-<div class="login-container w-full min-h-screen flex items-center justify-center">
-    <div class="login-form min-w-lg border shadow-sm rounded-lg p-8 py-12 bg-white flex flex-col items-center justify-center gap-8">
-        <h1 class="text-3xl font-bold text-pretty">Iniciar sesión en Kairo</h1>
-        <form class="w-full flex flex-col items-start justify-center gap-4">
-            <div class="form-group grid grid-rows-2 gap-0.5 w-full">
-                <label for="email">Correo electrónico:</label>
+<div class="px-6 w-full min-h-screen flex items-center justify-center">
+    <div class="lg:min-w-lg max-w-sm border shadow-sm rounded-lg p-8 py-12 bg-white flex flex-col items-center justify-center gap-8">
+        <h1 class="text-3xl font-bold text-pretty text-center">Iniciar sesión en Kairo</h1>
+        <form class="w-full flex flex-col items-start justify-center gap-4" method="POST" action="/api/auth/login">
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="email" class="text-sm font-medium self-end">Correo electrónico</label>
                 <input type="email" id="email" name="email" class="border rounded-md py-1 px-2 w-full" required>
             </div>
-            <div class="form-group grid grid-rows-2 gap-0.5 w-full">
-                <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full" required>
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="password" class="text-sm font-medium self-end">Contraseña</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full pr-10" required>
+                    <!-- Botón para móvil (mantiene estado con click) -->
+                    <button type="button" 
+                            class="md:hidden absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer transition-all duration-150 hover:bg-muted rounded-md p-1"
+                            (click)="togglePassword()"
+                            aria-label="Mostrar contraseña">
+                        <!-- Ojo normal (cuando la contraseña está oculta) -->
+                        @if (!isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        }
+                        <!-- Ojo tachado (cuando la contraseña está visible) -->
+                        @if (isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Ojo completo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <!-- Barra diagonal tachando el ojo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                            </svg>
+                        }
+                    </button>
+
+                    <!-- Botón para desktop (mantiene presionado) -->
+                    <button type="button" 
+                            class="hidden md:block absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer transition-all duration-150 hover:bg-muted rounded-md p-1"
+                            (mousedown)="showPassword($event)"
+                            (mouseup)="hidePassword($event)"
+                            (mouseleave)="hidePassword($event)"
+                            aria-label="Mostrar contraseña">
+                        <!-- Ojo normal (cuando la contraseña está oculta) -->
+                        @if (!isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        }
+                        <!-- Ojo tachado (cuando la contraseña está visible) -->
+                        @if (isPasswordVisible) {
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Ojo completo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <!-- Barra diagonal tachando el ojo -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                            </svg>
+                        }
+                    </button>
+                </div>
                 <div class="w-full flex items-center justify-end mt-0.5">
-                    <a routerLink="/password-recovery" class="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline hover:cursor-pointer transition-all duration-150">¿Olvidaste tu contraseña?</a>
+                    <a href="/password-recovery" class="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline hover:cursor-pointer transition-all duration-150">¿Olvidaste tu contraseña?</a>
                 </div>
             </div>
-            <button type="submit" class="w-full bg-blue-500 text-white rounded-md py-2 px-2 mt-4 cursor-pointer">Iniciar sesión</button>
+            <button type="submit" class="w-full h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-md shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Iniciar sesión</button>
         </form>
         
-        <div class="register-link text-xs font-medium text-muted-foreground">
-            <p>¿No tienes una cuenta? <a routerLink="/register" class="text-blue-500 hover:text-blue-600 hover:underline hover:cursor-pointer transition-all duration-150">Regístrate aquí</a></p>
+        <div class="text-xs font-medium text-muted-foreground">
+            <p>¿No tienes una cuenta? <a href="/register" class="text-blue-500 hover:text-blue-600 hover:underline hover:cursor-pointer transition-all duration-150">Regístrate aquí</a></p>
         </div>
     </div>
 </div>

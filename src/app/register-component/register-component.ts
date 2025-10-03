@@ -81,14 +81,14 @@ export class RegisterComponent {
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const username = formData.get('username') as string;
-    const recoveryQuestion = formData.get('recoveryQuestion') as string;
+    const recoveryAnswer = formData.get('recoveryAnswer') as string;
 
     if(password !== confirmPassword) {
       alert('Las contraseñas no coinciden.');
       return;
     }
 
-    if(!email.includes('@flowbit.com')) {
+    if(!email.endsWith('@flowbit.com')) {
       alert('Solo se permiten correos con dominio @flowbit.com');
       return;
     }
@@ -98,14 +98,14 @@ export class RegisterComponent {
       return;
     }
 
-    async function register(email: string, password: string, firstName: string, lastName: string, username: string, recoveryQuestion: string) {
+    async function register(email: string, password: string, firstName: string, lastName: string, username: string, recoveryAnswer: string) {
       try {
         const response = await fetch('https://kairo-backend.vercel.app/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email, password, firstName, lastName, username, recoveryQuestion })
+          body: JSON.stringify({ email, password, firstName, lastName, username, recoveryAnswer })
         });
         
         const data = await response.json();
@@ -122,6 +122,6 @@ export class RegisterComponent {
       }
     }
 
-    register(email, password, firstName, lastName, username, recoveryQuestion);
+    register(email, password, firstName, lastName, username, recoveryAnswer);
   }
 }

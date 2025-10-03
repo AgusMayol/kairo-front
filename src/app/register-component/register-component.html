@@ -14,16 +14,16 @@
             </div>
             <div class="grid grid-rows-2 gap-0.5 w-full">
                 <label for="username" class="text-sm font-medium self-end">Nombre de usuario</label>
-                <input type="text" id="username" name="username" class="border rounded-md py-1 px-2 w-full" required>
+                <input type="text" id="username" name="username" class="border rounded-md py-1 px-2 w-full" pattern="[a-zA-Z0-9_]+" title="Solo letras, números y guión bajo (_) permitidos" required>
             </div>
             <div class="grid grid-rows-2 gap-0.5 w-full">
                 <label for="email" class="text-sm font-medium self-end">Correo electrónico</label>
-                <input type="email" id="email" name="email" class="border rounded-md py-1 px-2 w-full" required>
+                <input type="email" id="email" name="email" class="border rounded-md py-1 px-2 w-full" pattern="[a-zA-Z0-9._%+-]+@flowbit\.com$" title="Solo se permiten correos con dominio @flowbit.com" required>
             </div>
             <div class="grid grid-rows-2 gap-0.5 w-full">
                 <label for="password" class="text-sm font-medium self-end">Contraseña</label>
                 <div class="relative">
-                    <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full pr-10" required>
+                    <input type="password" id="password" name="password" class="border rounded-md py-1 px-2 w-full pr-10" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\s\S]{8,}$" title="La contraseña debe tener al menos 8 caracteres, incluyendo una letra y un número" required>
                     <!-- Botón para móvil (mantiene estado con click) -->
                     <button type="button" 
                             class="md:hidden absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer transition-all duration-150 hover:bg-muted rounded-md p-1"
@@ -79,7 +79,7 @@
             <div class="grid grid-rows-2 gap-0.5 w-full">
                 <label for="password" class="text-sm font-medium self-end">Confirmar contraseña</label>
                 <div class="relative">
-                    <input type="password" id="confirmPassword" name="confirmPassword" class="border rounded-md py-1 px-2 w-full pr-10" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="border rounded-md py-1 px-2 w-full pr-10" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\s\S]{8,}$" title="La contraseña debe tener al menos 8 caracteres, incluyendo una letra y un número" required>
                     <!-- Botón para móvil (mantiene estado con click) -->
                     <button type="button" 
                             class="md:hidden absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer transition-all duration-150 hover:bg-muted rounded-md p-1"
@@ -130,6 +130,10 @@
                         }
                     </button>
                 </div>
+            </div>
+            <div class="grid grid-rows-2 gap-0.5 w-full">
+                <label for="recoveryAnswer" class="text-sm font-medium self-end">Pregunta de recuperación: ¿Cuál es el nombre del primer colegio al que asististe?</label>
+                <input type="text" id="recoveryAnswer" name="recoveryAnswer" class="border rounded-md py-1 px-2 w-full" required>
             </div>
             <button type="submit" class="w-full h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-md shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Registrarse</button>
         </form>

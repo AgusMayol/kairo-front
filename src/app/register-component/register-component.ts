@@ -81,33 +81,38 @@ export class RegisterComponent {
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const username = formData.get('username') as string;
+    const recoveryQuestion = formData.get('recoveryQuestion') as string;
 
     if(password !== confirmPassword) {
       alert('Las contraseñas no coinciden.');
       return;
     }
 
-    async function register(email: string, password: string, firstName: string, lastName: string, username: string) {
+    if(!email.includes('@flowbit.com')) {
+      alert('Solo se permiten correos con dominio @flowbit.com');
+      return;
+    }
+
+    if(password.length < 8) {
+      alert('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    async function register(email: string, password: string, firstName: string, lastName: string, username: string, recoveryQuestion: string) {
       try {
         const response = await fetch('https://kairo-backend.vercel.app/api/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email, password, firstName, lastName, username })
+          body: JSON.stringify({ email, password, firstName, lastName, username, recoveryQuestion })
         });
         
         const data = await response.json();
         
         if (data.success) {
-          setSessionCookie({
-            id: data.user.id,
-            email: data.user.email,
-            username: data.user.username,
-            firstName: data.user.firstName,
-            lastName: data.user.lastName
-          });
-          window.location.href = '/dashboard';
+         alert("Registro exitoso, por favor inicie sesión");
+          window.location.href = '/login';
         } else {
           alert(data.message);
         }
@@ -117,6 +122,6 @@ export class RegisterComponent {
       }
     }
 
-    register(email, password, firstName, lastName, username);
+    register(email, password, firstName, lastName, username, recoveryQuestion);
   }
 }

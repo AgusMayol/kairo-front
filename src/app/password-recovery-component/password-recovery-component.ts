@@ -69,4 +69,51 @@ export class PasswordRecoveryComponent {
       this.isConfirmPasswordVisible = false;
     }
   }
+
+
+  // Función de submit para el formulario
+  onSubmit(event: Event): void {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const recoveryAnswer = formData.get('recoveryAnswer') as string;
+
+    if(password !== confirmPassword) {
+      alert('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if(password.length < 8) {
+      alert('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    async function recovery(email: string, password: string, recoveryAnswer: string) {
+      try {
+        const response = await fetch('https://kairo-backend.vercel.app/api/recovery', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password, recoveryAnswer })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+         alert("Restablecimiento de contraseña exitoso, por favor inicie sesión");
+          window.location.href = '/login';
+        } else {
+          alert(data.message);
+        }
+      } catch (error) {
+        console.error('Error durante el restablecimiento de contraseña:', error);
+        alert('Error durante el restablecimiento de contraseña');
+      }
+    }
+
+    recovery(email, password, recoveryAnswer);
+  }
 }

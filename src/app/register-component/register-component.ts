@@ -10,6 +10,7 @@ import { setSessionCookie } from '../auth.util';
 export class RegisterComponent {
   isPasswordVisible: boolean = false;
   isConfirmPasswordVisible: boolean = false;
+  isSubmitting: boolean = false;
   
   togglePassword(): void {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
@@ -98,7 +99,16 @@ export class RegisterComponent {
       return;
     }
 
-    async function register(email: string, password: string, firstName: string, lastName: string, username: string, recoveryAnswer: string) {
+    this.isSubmitting = true;
+
+    const register = async (
+      email: string,
+      password: string,
+      firstName: string,
+      lastName: string,
+      username: string,
+      recoveryAnswer: string
+    ) => {
       try {
         const response = await fetch('https://kairo-backend.vercel.app/api/register', {
           method: 'POST',
@@ -107,20 +117,22 @@ export class RegisterComponent {
           },
           body: JSON.stringify({ email, password, firstName, lastName, username, recoveryAnswer })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
-         alert("Registro exitoso, por favor inicie sesión");
+          alert("Registro exitoso, por favor inicie sesión");
           window.location.href = '/login';
         } else {
           alert(data.message);
+          this.isSubmitting = false;
         }
       } catch (error) {
         console.error('Error durante el registro:', error);
         alert('Error durante el registro');
+        this.isSubmitting = false;
       }
-    }
+    };
 
     register(email, password, firstName, lastName, username, recoveryAnswer);
   }

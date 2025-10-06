@@ -11,6 +11,7 @@ import { setSessionCookie } from '../auth.util';
 export class LogInComponent {
   router = inject(Router);
   isPasswordVisible: boolean = false;
+  isSubmitting: boolean = false;
   
   togglePassword(): void {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
@@ -48,7 +49,9 @@ export class LogInComponent {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    async function login(email: string, password: string) {
+    this.isSubmitting = true;
+
+    const login = async (email: string, password: string) => {
       try {
         const response = await fetch('https://kairo-backend.vercel.app/api/login', {
           method: 'POST',
@@ -57,9 +60,9 @@ export class LogInComponent {
           },
           body: JSON.stringify({ email, password })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           setSessionCookie({
             id: data.user.id,
@@ -71,12 +74,14 @@ export class LogInComponent {
           window.location.href = '/dashboard';
         } else {
           alert(data.message);
+          this.isSubmitting = false;
         }
       } catch (error) {
         console.error('Error durante el login:', error);
         alert('Error durante el login');
+        this.isSubmitting = false;
       }
-    }
+    };
 
     login(email, password);
   }

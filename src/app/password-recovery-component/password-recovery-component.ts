@@ -10,6 +10,7 @@ import {  } from '@angular/router';
 export class PasswordRecoveryComponent {
   isPasswordVisible: boolean = false;
   isConfirmPasswordVisible: boolean = false;
+  isSubmitting: boolean = false;
 
   togglePassword(): void {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
@@ -90,7 +91,9 @@ export class PasswordRecoveryComponent {
       return;
     }
 
-    async function recovery(email: string, password: string, recoveryAnswer: string) {
+    this.isSubmitting = true;
+
+    const recovery = async (email: string, password: string, recoveryAnswer: string) => {
       try {
         const response = await fetch('https://kairo-backend.vercel.app/api/recovery', {
           method: 'POST',
@@ -99,20 +102,22 @@ export class PasswordRecoveryComponent {
           },
           body: JSON.stringify({ email, password, recoveryAnswer })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
-         alert("Restablecimiento de contraseña exitoso, por favor inicie sesión");
+          alert("Restablecimiento de contraseña exitoso, por favor inicie sesión");
           window.location.href = '/login';
         } else {
           alert(data.message);
+          this.isSubmitting = false;
         }
       } catch (error) {
         console.error('Error durante el restablecimiento de contraseña:', error);
         alert('Error durante el restablecimiento de contraseña');
+        this.isSubmitting = false;
       }
-    }
+    };
 
     recovery(email, password, recoveryAnswer);
   }

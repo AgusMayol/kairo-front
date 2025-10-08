@@ -43,7 +43,7 @@ export class PasswordRecoveryComponent {
 
 
   toggleConfirmPassword(): void {
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const passwordInput = document.getElementById('confirmPassword') as HTMLInputElement;
     if (passwordInput) {
       if (this.isConfirmPasswordVisible) {
         passwordInput.type = 'password';

@@ -2,7 +2,12 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
-## Entrega 1
+## v2.0.0
+
+### Arreglos
+- Bug--001 (TC--010) — Sprint_2: Ícono “ojito” se duplica en Edge al tipear. Ahora, el botón de "ojito" nativo de Microsoft Edge está oculto por defecto.
+
+## v1.0.0
 
 ### Funcionalidades nuevas
 - Componentes de autenticación: Login, Register y PasswordRecovery.

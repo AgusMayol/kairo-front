@@ -7,8 +7,12 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 ### Arreglos
 - Bug--001 (TC--010) — Sprint_2: Ícono “ojito” se duplica en Edge al tipear. Ahora, el botón de "ojito" nativo de Microsoft Edge está oculto por defecto.
 - BUG-0006 (TC-0013), BUG-0008 (TC-0026), BUG-0009 (TC-0027): Registro: “Email o username ya en uso” cuando no existen. Ahora, el registrarse con credenciales nuevas verifica correctamente que no exista el usuario.
--BUG-0007 (TC-0025): Registro: permite username duplicado. 
--BUG-SIN-DOCUMENTAR-0001: Recovery: mobile: Ojito de confirmar nueva contraseña modifica el estado visible de nueva contraseña. Ahora, cada ojito modifica el campo correcto. 
+- BUG-0007 (TC-0025): Registro: permite username duplicado. Ahora, el registrarse con credenciales nuevas verifica correctamente que no exista el usuario.
+- BUG-SIN-DOCUMENTAR-0001: Recovery: mobile: Ojito de confirmar nueva contraseña modifica el estado visible de nueva contraseña. Ahora, cada ojito modifica el campo correcto. 
+- BUG-0002 (TC-0004): No permite iniciar sesión con credenciales válidas. Ahora, se agregaron los usuarios de prueba por defecto.
+- BUG-0001 (TC-0001), BUG-0003 (TC-0002), BUG-0004 (TC-0002): Campo de identificación solo acepta email (debe aceptar email o usuario). Ahora, el login permite identificarse con ambos campos.
+- BUG-0010 (TC-0010), BUG-0011 (TC-0010), BUG-0005 (TC-0026): Mensajería de error en login prioriza “email faltante” y no valida password. Ahora, el register verifica los campos de username y password.
+
 
 ## v1.0.0
 

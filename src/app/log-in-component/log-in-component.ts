@@ -73,8 +73,15 @@ export class LogInComponent {
           });
           window.location.href = '/dashboard';
         } else {
-          alert(data.message);
-          this.isSubmitting = false;
+          if(data.message === 'Tu cuenta fue bloqueada por múltiples intentos fallidos. Intentá nuevamente más tarde o contactá al administrador.') {
+            const minutes = Math.floor(data.remainingTime / 60000);
+            const seconds = Math.floor((data.remainingTime % 60000) / 1000);
+            alert(data.message + ` Tiempo restante hasta que se pueda volver a intentar: ${minutes} minutos y ${seconds} segundos`);
+            this.isSubmitting = false;
+          } else {
+            alert(data.message);
+            this.isSubmitting = false;
+          }
         }
       } catch (error) {
         console.error('Error durante el login:', error);

@@ -121,7 +121,7 @@ export class RegisterComponent {
         const data = await response.json();
 
         if (data.success) {
-          alert("Registro exitoso, por favor inicie sesión");
+          alert("Registro exitoso, por favor inicie sesión.");
           window.location.href = '/login';
         } else {
           alert(data.message);

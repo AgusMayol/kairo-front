@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {  } from '@angular/router';
+import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-password-recovery-component',
@@ -82,12 +83,12 @@ export class PasswordRecoveryComponent {
     const recoveryAnswer = formData.get('recoveryAnswer') as string;
 
     if(password !== confirmPassword) {
-      alert('Las contraseñas no coinciden.');
+      toast.error('Las contraseñas no coinciden.');
       return;
     }
 
     if(password.length < 8) {
-      alert('La contraseña debe tener al menos 8 caracteres.');
+      toast.error('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
@@ -95,26 +96,61 @@ export class PasswordRecoveryComponent {
 
     const recovery = async (email: string, password: string, recoveryAnswer: string) => {
       try {
-        const response = await fetch('https://kairo-backend.vercel.app/api/recovery', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+        let data: any;
+
+        const promise = () => new Promise(
+          (resolve, reject) => {
+            fetch('https://kairo-backend.vercel.app/api/recovery', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ email, password, recoveryAnswer })
+            })
+            .then(response => response.json())
+            .then(dataJson => {
+              data = dataJson;
+              if (data.success) {
+                resolve(data);
+              } else {
+                reject(data.message);
+                this.isSubmitting = false;
+              }
+            })
+            .catch(error => {
+              console.error('Error durante el restablecimiento de contraseña:', error);
+              reject('Error durante el restablecimiento de contraseña');
+              this.isSubmitting = false;
+            });
+          }
+        );
+
+        toast.promise(promise, {
+          loading: 'Restableciendo contraseña...',
+          success: (data: any) => {
+            return 'Restablecimiento de contraseña exitoso, por favor inicie sesión';
           },
-          body: JSON.stringify({ email, password, recoveryAnswer })
+          error: (error: any) => {
+            return error;
+          },
         });
 
-        const data = await response.json();
-
-        if (data.success) {
-          alert("Restablecimiento de contraseña exitoso, por favor inicie sesión");
-          window.location.href = '/login';
-        } else {
-          alert(data.message);
-          this.isSubmitting = false;
-        }
+        const checkDataAndRedirect = () => {
+          if (data) {
+            if (data.success) {
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 1000);
+            }
+          } else {
+            setTimeout(checkDataAndRedirect, 100); // Check again in 100ms
+          }
+        };
+        
+        checkDataAndRedirect();
       } catch (error) {
         console.error('Error durante el restablecimiento de contraseña:', error);
-        alert('Error durante el restablecimiento de contraseña');
+        toast.error('Error durante el restablecimiento de contraseña');
         this.isSubmitting = false;
       }
     };

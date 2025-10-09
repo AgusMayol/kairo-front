@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { setSessionCookie } from '../auth.util';
+import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-register-component',
@@ -85,17 +86,17 @@ export class RegisterComponent {
     const recoveryAnswer = formData.get('recoveryAnswer') as string;
 
     if(password !== confirmPassword) {
-      alert('Las contraseñas no coinciden.');
+      toast.error('Las contraseñas no coinciden.');
       return;
     }
 
     if(!email.endsWith('@flowbit.com')) {
-      alert('Solo se permiten correos con dominio @flowbit.com');
+      toast.error('Solo se permiten correos con dominio @flowbit.com');
       return;
     }
 
     if(password.length < 8) {
-      alert('La contraseña debe tener al menos 8 caracteres.');
+      toast.error('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
@@ -110,26 +111,61 @@ export class RegisterComponent {
       recoveryAnswer: string
     ) => {
       try {
-        const response = await fetch('https://kairo-backend.vercel.app/api/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+        let data: any;
+
+        const promise = () => new Promise(
+          (resolve, reject) => {
+            fetch('https://kairo-backend.vercel.app/api/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ email, password, firstName, lastName, username, recoveryAnswer })
+            })
+            .then(response => response.json())
+            .then(dataJson => {
+              data = dataJson;
+              if (data.success) {
+                resolve(data);
+              } else {
+                reject(data.message);
+                this.isSubmitting = false;
+              }
+            })
+            .catch(error => {
+              console.error('Error durante el registro:', error);
+              reject('Error durante el registro');
+              this.isSubmitting = false;
+            });
+          }
+        );
+
+        toast.promise(promise, {
+          loading: 'Registrando usuario...',
+          success: (data: any) => {
+            return 'Registro exitoso, por favor inicie sesión';
           },
-          body: JSON.stringify({ email, password, firstName, lastName, username, recoveryAnswer })
+          error: (error: any) => {
+            return error;
+          },
         });
 
-        const data = await response.json();
-
-        if (data.success) {
-          alert("Registro exitoso, por favor inicie sesión.");
-          window.location.href = '/login';
-        } else {
-          alert(data.message);
-          this.isSubmitting = false;
-        }
+        const checkDataAndRedirect = () => {
+          if (data) {
+            if (data.success) {
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 1000);
+            }
+          } else {
+            setTimeout(checkDataAndRedirect, 100); // Check again in 100ms
+          }
+        };
+        
+        checkDataAndRedirect();
       } catch (error) {
         console.error('Error durante el registro:', error);
-        alert('Error durante el registro');
+        toast.error('Error durante el registro');
         this.isSubmitting = false;
       }
     };

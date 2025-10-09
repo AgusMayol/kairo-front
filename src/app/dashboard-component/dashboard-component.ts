@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { getSessionUser, clearSessionCookie } from '../auth.util';
+import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-dashboard-component',

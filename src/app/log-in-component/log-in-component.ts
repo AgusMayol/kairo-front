@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { setSessionCookie } from '../auth.util';
+import { toast } from 'ngx-sonner';
 
 @Component({
   selector: 'app-log-in-component',
@@ -53,39 +54,72 @@ export class LogInComponent {
 
     const login = async (email: string, password: string) => {
       try {
-        const response = await fetch('https://kairo-backend.vercel.app/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+        let data: any;
+
+        const promise = () => new Promise(
+          (resolve, reject) => {
+            fetch('https://kairo-backend.vercel.app/api/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(dataJson => {
+              data = dataJson;
+              if (data.success) {
+                setSessionCookie({
+                  id: data.user.id,
+                  email: data.user.email,
+                  username: data.user.username,
+                  firstName: data.user.firstName,
+                  lastName: data.user.lastName
+                });
+              
+              resolve(data);
+              
+            } else {
+              if(data.message === 'Tu cuenta fue bloqueada por múltiples intentos fallidos. Intentá nuevamente más tarde o contactá al administrador.') {
+                const minutes = Math.floor(data.remainingTime / 60000);
+                const seconds = Math.floor((data.remainingTime % 60000) / 1000);
+                reject(data.message + ` Tiempo restante hasta que se pueda volver a intentar: ${minutes} minutos y ${seconds} segundos`);
+                this.isSubmitting = false;
+              } else {
+                reject(data.message);
+                this.isSubmitting = false;
+              }
+            }
+          }
+        );
+      });
+ 
+        toast.promise(promise, {
+          loading: 'Iniciando sesión...',
+          success: (data: any) => {
+            return 'Login exitoso';
           },
-          body: JSON.stringify({ email, password })
+          error: (error: any) => {
+            return error;
+          },
         });
 
-        const data = await response.json();
-
-        if (data.success) {
-          setSessionCookie({
-            id: data.user.id,
-            email: data.user.email,
-            username: data.user.username,
-            firstName: data.user.firstName,
-            lastName: data.user.lastName
-          });
-          window.location.href = '/dashboard';
-        } else {
-          if(data.message === 'Tu cuenta fue bloqueada por múltiples intentos fallidos. Intentá nuevamente más tarde o contactá al administrador.') {
-            const minutes = Math.floor(data.remainingTime / 60000);
-            const seconds = Math.floor((data.remainingTime % 60000) / 1000);
-            alert(data.message + ` Tiempo restante hasta que se pueda volver a intentar: ${minutes} minutos y ${seconds} segundos`);
-            this.isSubmitting = false;
+        const checkDataAndRedirect = () => {
+          if (data) {
+            if (data.success) {
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 1000);
+            }
           } else {
-            alert(data.message);
-            this.isSubmitting = false;
+            setTimeout(checkDataAndRedirect, 100); // Check again in 100ms
           }
-        }
+        };
+        
+        checkDataAndRedirect();
       } catch (error) {
         console.error('Error durante el login:', error);
-        alert('Error durante el login');
+        toast.error('Error durante el login');
         this.isSubmitting = false;
       }
     };

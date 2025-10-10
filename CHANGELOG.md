@@ -4,6 +4,9 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 
 ## v2.0.0
 
+### Funcionalidades nuevas
+- Módulo Tablero.
+
 ### Cambios
 - Nuevo componente para alertas.
 
@@ -15,6 +18,9 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 - BUG-0002 (TC-0004): No permite iniciar sesión con credenciales válidas. Ahora, se agregaron los usuarios de prueba por defecto.
 - BUG-0001 (TC-0001), BUG-0003 (TC-0002), BUG-0004 (TC-0002): Campo de identificación solo acepta email (debe aceptar email o usuario). Ahora, el login permite identificarse con ambos campos.
 - BUG-0010 (TC-0010), BUG-0011 (TC-0010), BUG-0005 (TC-0026): Mensajería de error en login prioriza “email faltante” y no valida password. Ahora, el register verifica los campos de username y password.
+
+
+
 
 
 ## v1.0.0

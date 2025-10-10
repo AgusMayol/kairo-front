@@ -17,7 +17,7 @@
                 <!-- </a> -->
             </button>
             <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
-                <z-divider></z-divider>
+                <z-divider />
             </div>
             
             <button z-button zType="ghost" zFull class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground" [attr.data-active]="currentRoute === '/dashboard'">
@@ -69,9 +69,66 @@
     <!-- Main -->
     <main class="col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-8">
         
-        <div class="border w-full h-full shadow-sm rounded-lg p-2 bg-white flex flex-col items-start justify-start gap-2">
+        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-start justify-start gap-2">
 
-            
+            <div class="w-full h-full grid grid-cols-3 gap-12">
+
+                <div class=" rounded-lg h-full flex flex-col items-center justify-start gap-4">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-[#FDF3E1] flex flex-col items-center justify-center gap-2">
+                        <h2 class="text-xl text-center font-medium text-pretty">
+                            Pendiente
+                        </h2>
+                    </div>
+
+                    <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto py-4">
+                        <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
+                            <div class="w-full flex items-center justify-start gap-3">
+                                <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-2 *:rounded-none *:rotate-45" [zImage]="zImagePin" />
+                                <div class="flex flex-col items-start justify-start gap-0.5 truncate">
+                                    <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{ lastName }}</h2>
+                                    
+                                </div>
+                                
+                            </div>
+                        <!-- </a> -->
+                    </button>
+
+                    <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
+                        <z-divider />
+                    </div>
+
+                    <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto py-4">
+                        <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
+                            <div class="w-full flex items-center justify-start gap-3">
+                                <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-2 *:rounded-none *:rotate-45" [zImage]="zImagePin" />
+                                <div class="flex flex-col items-start justify-start gap-0.5 truncate">
+                                    <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{ lastName }}</h2>
+                                    
+                                </div>
+                                
+                            </div>
+                        <!-- </a> -->
+                    </button>
+                </div>
+
+                <div class=" rounded-lg h-full">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-orange-100 flex flex-col items-center justify-center gap-2">
+                        <h2 class="text-xl text-center font-medium text-pretty">
+                            En progreso
+                        </h2>
+                    </div>
+                </div>
+
+                <div class=" rounded-lg h-full">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-green-300/35 flex flex-col items-center justify-center gap-2">
+                        <h2 class="text-xl text-center font-medium text-pretty">
+                            Terminados
+                        </h2>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
         
     </main>

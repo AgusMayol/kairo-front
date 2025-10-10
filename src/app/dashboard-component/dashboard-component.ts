@@ -45,6 +45,11 @@ export class DashboardComponent {
     url: "/user.svg",
   };
 
+  readonly zImagePin = {
+    fallback: "",
+    url: "/pin.svg",
+  };
+
   readonly zKairo = {
     fallback: "",
     url: "/logo-simple.png",

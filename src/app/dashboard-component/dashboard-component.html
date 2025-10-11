@@ -1,6 +1,6 @@
 <div class="w-full min-h-screen grid grid-cols-16">
     <!-- Sidebar -->
-    <div class="col-span-3 border-r p-4 bg-sidebar flex flex-col items-center justify-between gap-8">
+    <div class="col-span-3 border-r p-4 bg-sidebar hidden md:flex flex-col items-center justify-between gap-8">
         <div class="w-full flex flex-col items-center justify-start gap-4">
             <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
                 <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
@@ -67,63 +67,251 @@
     </div>
 
     <!-- Main -->
-    <main class="col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-8">
+    <main class="col-span-16 md:col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-8">
         
-        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-start justify-start gap-2">
+        <!-- Mobile Menu Button -->
+        <div class="w-full flex justify-start md:hidden p-4">
+            <button (click)="openMobileSheet()" 
+                    class="p-2 rounded-md bg-white border shadow-sm hover:shadow-md transition-shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-center justify-center gap-4" *ngIf="isLoading">
+            <div class="flex flex-col items-center justify-center gap-4">
+                <!-- Spinner -->
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Cargando tareas...</h3>
+                    <p class="text-sm text-gray-500 mt-1">Por favor espera mientras obtenemos tus tareas</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tasks Content -->
+        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-start justify-start gap-2" *ngIf="!isLoading">
 
-            <div class="w-full h-full grid grid-cols-3 gap-12">
+            <div class="w-full h-full grid grid-cols-1 grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
 
-                <div class=" rounded-lg h-full flex flex-col items-center justify-start gap-4">
-                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-[#FDF3E1] flex flex-col items-center justify-center gap-2">
+                <!-- Columna Pendiente -->
+                <div class="rounded-lg h-full flex flex-col items-center justify-start gap-4">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-yellow-100 text-yellow-800 flex flex-col items-center justify-center gap-2">
                         <h2 class="text-xl text-center font-medium text-pretty">
                             Pendiente
                         </h2>
                     </div>
 
-                    <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto py-4">
-                        <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
-                            <div class="w-full flex items-center justify-start gap-3">
-                                <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-2 *:rounded-none *:rotate-45" [zImage]="zImagePin" />
-                                <div class="flex flex-col items-start justify-start gap-0.5 truncate">
-                                    <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{ lastName }}</h2>
+                    <!-- Tareas Pendientes -->
+                    <div class="w-full flex flex-col gap-2" *ngIf="getTasksByStatus('pendiente').length > 0">
+                        <div *ngFor="let task of getTasksByStatus('pendiente')" 
+                             class="border w-full shadow-sm rounded-lg p-3 bg-white hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-medium text-gray-900 truncate">{{ task.tarea.titulo }}</h3>
                                     
+                                    <!-- Prioridad del sistema -->
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              [ngClass]="{
+                                                'bg-red-100 text-red-800': task.tarea.prioridad === 'alta',
+                                                'bg-yellow-100 text-yellow-800': task.tarea.prioridad === 'media',
+                                                'bg-green-100 text-green-800': task.tarea.prioridad === 'baja'
+                                              }">
+                                            {{ task.tarea.prioridad | titlecase }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Fecha de vencimiento -->
+                                    <p class="text-xs text-gray-500 mt-1" *ngIf="task.tarea.fechaVencimiento">
+                                        Vence: {{ task.tarea.fechaVencimiento | date:'dd/MM/yyyy' }}
+                                    </p>
+                                    
+                                    <!-- Botones de acción -->
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <button (click)="togglePersonalPriority(task)" 
+                                                class="p-1 transition-colors"
+                                                [class]="task.asignacion.esPrioridad ? 'text-yellow-500' : 'text-gray-400'"
+                                                [title]="task.asignacion.esPrioridad ? 'Quitar de prioridades' : 'Agregar a prioridades'">
+                                            <svg class="w-4 h-4" [attr.fill]="task.asignacion.esPrioridad ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- <button (click)="openEditDialog(task)" 
+                                                class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                                title="Editar tarea">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button> -->
+                                        
+                                        <button (click)="openDetailsModal(task)" 
+                                                class="p-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                                title="Ver detalles">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                                
                             </div>
-                        <!-- </a> -->
-                    </button>
-
-                    <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
-                        <z-divider />
+                        </div>
                     </div>
 
-                    <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto py-4">
-                        <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
-                            <div class="w-full flex items-center justify-start gap-3">
-                                <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-2 *:rounded-none *:rotate-45" [zImage]="zImagePin" />
-                                <div class="flex flex-col items-start justify-start gap-0.5 truncate">
-                                    <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{ lastName }}</h2>
-                                    
-                                </div>
-                                
-                            </div>
-                        <!-- </a> -->
-                    </button>
+                    <!-- Estado vacío para Pendiente -->
+                    <div class="w-full flex items-center justify-center py-8 text-gray-400" 
+                         *ngIf="!tasksData || getTasksByStatus('pendiente').length === 0">
+                        <p class="text-sm">No hay tareas asignadas</p>
+                    </div>
                 </div>
 
-                <div class=" rounded-lg h-full">
-                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-orange-100 flex flex-col items-center justify-center gap-2">
+                <!-- Columna En Progreso -->
+                <div class="rounded-lg h-full flex flex-col items-center justify-start gap-4">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-blue-100 text-blue-800 flex flex-col items-center justify-center gap-2">
                         <h2 class="text-xl text-center font-medium text-pretty">
                             En progreso
                         </h2>
                     </div>
+
+                    <!-- Tareas En Progreso -->
+                    <div class="w-full flex flex-col gap-2" *ngIf="getTasksByStatus('en progreso').length > 0">
+                        <div *ngFor="let task of getTasksByStatus('en progreso')" 
+                             class="border w-full shadow-sm rounded-lg p-3 bg-white hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-medium text-gray-900 truncate">{{ task.tarea.titulo }}</h3>
+                                    
+                                    <!-- Prioridad del sistema -->
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              [ngClass]="{
+                                                'bg-red-100 text-red-800': task.tarea.prioridad === 'alta',
+                                                'bg-yellow-100 text-yellow-800': task.tarea.prioridad === 'media',
+                                                'bg-green-100 text-green-800': task.tarea.prioridad === 'baja'
+                                              }">
+                                            {{ task.tarea.prioridad | titlecase }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Fecha de vencimiento -->
+                                    <p class="text-xs text-gray-500 mt-1" *ngIf="task.tarea.fechaVencimiento">
+                                        Vence: {{ task.tarea.fechaVencimiento | date:'dd/MM/yyyy' }}
+                                    </p>
+                                    
+                                    <!-- Botones de acción -->
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <button (click)="togglePersonalPriority(task)" 
+                                                class="p-1 transition-colors"
+                                                [class]="task.asignacion.esPrioridad ? 'text-yellow-500' : 'text-gray-400'"
+                                                [title]="task.asignacion.esPrioridad ? 'Quitar de prioridades' : 'Agregar a prioridades'">
+                                            <svg class="w-4 h-4" [attr.fill]="task.asignacion.esPrioridad ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- <button (click)="openEditDialog(task)" 
+                                                class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                                title="Editar tarea">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button> -->
+                                        
+                                        <button (click)="openDetailsModal(task)" 
+                                                class="p-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                                title="Ver detalles">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado vacío para En Progreso -->
+                    <div class="w-full flex items-center justify-center py-8 text-gray-400" 
+                         *ngIf="!tasksData || getTasksByStatus('en progreso').length === 0">
+                        <p class="text-sm">No hay tareas asignadas</p>
+                    </div>
                 </div>
 
-                <div class=" rounded-lg h-full">
-                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-green-300/35 flex flex-col items-center justify-center gap-2">
+                <!-- Columna Completadas -->
+                <div class="rounded-lg h-full flex flex-col items-center justify-start gap-4">
+                    <div class="border w-full shadow-sm rounded-lg p-4 py-6 bg-green-100 text-green-800 flex flex-col items-center justify-center gap-2">
                         <h2 class="text-xl text-center font-medium text-pretty">
-                            Terminados
+                            Completadas
                         </h2>
+                    </div>
+
+                    <!-- Tareas Completadas -->
+                    <div class="w-full flex flex-col gap-2" *ngIf="getTasksByStatus('completada').length > 0">
+                        <div *ngFor="let task of getTasksByStatus('completada')" 
+                             class="border w-full shadow-sm rounded-lg p-3 bg-white hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-medium text-gray-900 truncate">{{ task.tarea.titulo }}</h3>
+                                    
+                                    <!-- Prioridad del sistema -->
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              [ngClass]="{
+                                                'bg-red-100 text-red-800': task.tarea.prioridad === 'alta',
+                                                'bg-yellow-100 text-yellow-800': task.tarea.prioridad === 'media',
+                                                'bg-green-100 text-green-800': task.tarea.prioridad === 'baja'
+                                              }">
+                                            {{ task.tarea.prioridad | titlecase }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Fecha de vencimiento -->
+                                    <p class="text-xs text-gray-500 mt-1" *ngIf="task.tarea.fechaVencimiento">
+                                        Vence: {{ task.tarea.fechaVencimiento | date:'dd/MM/yyyy' }}
+                                    </p>
+                                    
+                                    <!-- Botones de acción -->
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <button (click)="togglePersonalPriority(task)" 
+                                                class="p-1 transition-colors"
+                                                [class]="task.asignacion.esPrioridad ? 'text-yellow-500' : 'text-gray-400'"
+                                                [title]="task.asignacion.esPrioridad ? 'Quitar de prioridades' : 'Agregar a prioridades'">
+                                            <svg class="w-4 h-4" [attr.fill]="task.asignacion.esPrioridad ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- <button (click)="openEditDialog(task)" 
+                                                class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                                                title="Editar tarea">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button> -->
+                                        
+                                        <button (click)="openDetailsModal(task)" 
+                                                class="p-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                                title="Ver detalles">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado vacío para Completadas -->
+                    <div class="w-full flex items-center justify-center py-8 text-gray-400" 
+                         *ngIf="!tasksData || getTasksByStatus('completada').length === 0">
+                        <p class="text-sm">No hay tareas asignadas</p>
                     </div>
                 </div>
 
@@ -133,3 +321,230 @@
         
     </main>
 </div>
+
+<!-- Task Edit Form Template -->
+<ng-template #taskEditForm>
+    <form [formGroup]="taskForm" (ngSubmit)="saveTaskChanges()" class="space-y-4">
+        <!-- Título -->
+        <div>
+            <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+            <input 
+                id="titulo" 
+                type="text" 
+                formControlName="titulo"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ingresa el título de la tarea">
+        </div>
+
+        <!-- Prioridad -->
+        <div>
+            <label for="prioridad" class="block text-sm font-medium text-gray-700 mb-1">Prioridad *</label>
+            <select 
+                id="prioridad" 
+                formControlName="prioridad"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Selecciona una prioridad</option>
+                <option *ngFor="let prioridad of prioridades" [value]="prioridad">
+                    {{ prioridad | titlecase }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Estado -->
+        <div>
+            <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+            <select 
+                id="estado" 
+                formControlName="estado"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Selecciona un estado</option>
+                <option *ngFor="let estado of estados" [value]="estado">
+                    {{ estado | titlecase }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Nota -->
+        <div>
+            <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+            <textarea 
+                id="nota" 
+                formControlName="nota"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Agrega una nota adicional (opcional)"></textarea>
+        </div>
+
+        <!-- Es Prioridad -->
+        <div class="flex items-center">
+            <input 
+                id="esPrioridad" 
+                type="checkbox" 
+                formControlName="esPrioridad"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="esPrioridad" class="ml-2 block text-sm text-gray-700">
+                Marcar como prioridad especial
+            </label>
+        </div>
+    </form>
+</ng-template>
+
+<!-- Task Details Modal Template -->
+<ng-template #taskDetailsModal>
+    <div class="space-y-6">
+        <!-- Información básica -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">{{ selectedTask?.tarea.titulo }}</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                      [ngClass]="{
+                        'bg-red-100 text-red-800': selectedTask?.tarea.prioridad === 'alta',
+                        'bg-yellow-100 text-yellow-800': selectedTask?.tarea.prioridad === 'media',
+                        'bg-green-100 text-green-800': selectedTask?.tarea.prioridad === 'baja'
+                      }">
+                    {{ selectedTask?.tarea.prioridad | titlecase }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Descripción -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded min-h-[60px]">
+                {{ selectedTask?.tarea.descripcion || 'Sin descripción' }}
+            </p>
+        </div>
+
+        <!-- Fechas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de creación</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Última actualización</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.ultimaActualizacion | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.fechaVencimiento ? (selectedTask.tarea.fechaVencimiento | date:'dd/MM/yyyy') : 'Sin fecha de vencimiento' }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Asignada por -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Asignada por</label>
+            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {{ selectedTask?.tarea.asignadoPor || 'No especificado' }}
+            </p>
+        </div>
+
+        <!-- Estado actual -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Estado actual</label>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                      [ngClass]="{
+                        'bg-yellow-100 text-yellow-800': selectedTask?.tarea.estado === 'pendiente',
+                        'bg-blue-100 text-blue-800': selectedTask?.tarea.estado === 'en progreso',
+                        'bg-green-100 text-green-800': selectedTask?.tarea.estado === 'terminado'
+                      }">
+                    {{ selectedTask?.tarea.estado | titlecase }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Cambiar estado -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cambiar estado</label>
+            <select 
+                [(ngModel)]="selectedTask.tarea.estado"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option *ngFor="let estado of estados" [value]="estado">
+                    {{ estado | titlecase }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Notas -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+            <textarea 
+                [(ngModel)]="selectedTask.tarea.nota"
+                rows="4"
+                maxlength="400"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Agrega notas sobre esta tarea..."></textarea>
+            <p class="text-xs text-gray-500 mt-1">
+                {{ (selectedTask?.tarea.nota || '').length }}/400 caracteres
+            </p>
+        </div>
+    </div>
+</ng-template>
+
+<!-- Sidebar Content Template for Mobile Sheet -->
+<ng-template class="bg-sidebar w-full h-full" #sidebarContent>
+    <div class="w-full h-full bg-sidebar flex flex-col items-center justify-between gap-8 p-4">
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                <div class="w-full flex items-center justify-start gap-2">
+                    <z-avatar zType="outline" zSize="sm" zShape="circle" class="" [zImage]="zKairo" />
+                    <div class="flex flex-col items-start justify-start gap-0 truncate">
+                        <h2 class="w-full text-base text-start font-medium text-pretty truncate">Kairo by Flowbit</h2>
+                        <span class="w-full text-xs text-muted-foreground truncate text-start">
+                            Task Manager
+                        </span>
+                    </div>
+                </div>
+            </button>
+            <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
+                <z-divider />
+            </div>
+            
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground" [attr.data-active]="currentRoute === '/dashboard'">
+                <a href="/dashboard" class="w-full h-full flex items-center justify-start">
+                    Tablero
+                </a>
+            </button>
+
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
+                Reportes
+            </button>
+
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
+                Prioridades
+            </button>
+        </div>
+            
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <div class="border w-full h-full shadow-sm rounded-lg p-2 bg-white flex flex-col items-start justify-start gap-2">
+                <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                    <div class="w-full flex items-center justify-start gap-2">
+                        <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-1.5 *:rounded-none" [zImage]="zImageDefault" />
+                        <div class="flex flex-col items-start justify-start gap-0.5 truncate">
+                            <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{ lastName }}</h2>
+                            <span class="w-full text-xs text-muted-foreground truncate text-start">
+                                {{ email }}
+                            </span>
+                        </div>
+                    </div>
+                </button>
+                
+                <button (click)="logout()" class="w-full truncate h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Cerrar sesión</button>
+            </div>
+        </div>
+    </div>
+</ng-template>

@@ -5,10 +5,20 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 ## v2.0.0
 
 ### Funcionalidades nuevas
-- Módulo Tablero.
+- Módulo Tablero funcional, dividido en tres columnas (Pendiente, En progreso y Completadas).
+- Tareas en forma de tarjetas, cada una con los detalles de la tarea y con botones de Prioridad (Estrella) y Ver detalles (Ojo).
+- Alerta de "Modificaiones guardadas" al modificar el estado o la nota de una tarea.
+- Alerta de "No se detectaron modificaciones" si se presiona el botón de "Guardar cambios" y el usuario no realizó modificaciones.
+- Modal para realizar cambios a cada tarea.
+- Barra lateral con botones de Tablero, Reportes (no funcional) y Prioridades (no funcional).
+- Barra lateral en mobile que se acciona a través de un botón.
+- Estado de "Cargando tareas" al acceder al tablero
+- Estado de "Tareas vacías" si el usuario no cuenta con tareas en una columna.
+- Responsive en todo el tablero.
 
 ### Cambios
-- Nuevo componente para alertas.
+- Nuevo componente para alertas modernas.
+- Botón de Cerrar sesión desplazado a la barra lateral.
 
 ### Arreglos
 - Bug--001 (TC--010) — Sprint_2: Ícono “ojito” se duplica en Edge al tipear. Ahora, el botón de "ojito" nativo de Microsoft Edge está oculto por defecto.

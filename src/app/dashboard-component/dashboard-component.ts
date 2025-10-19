@@ -25,15 +25,21 @@ export class DashboardComponent implements OnInit {
   email: string = '';
   currentRoute: string = '';
   tasksData: any = null;
+  filteredTasksData: any = null; // Nueva propiedad para tareas filtradas
   isLoading: boolean = true;
-  
+
+  // Nuevas propiedades para filtros
+  filtroTitulo: string = '';
+  filtroDescripcion: string = '';
+  filtroUsuarioAsignador: string = '';
+
   // Form properties
   taskForm: FormGroup;
   estados = ['pendiente', 'en progreso', 'completada'];
   prioridades = ['alta', 'media', 'baja'];
   selectedTask: any = null;
   originalTaskData: any = null; // Store original data for comparison
-  
+
   @ViewChild('taskEditForm', { static: true }) taskEditFormTemplate!: TemplateRef<any>;
   @ViewChild('taskDetailsModal', { static: true }) taskDetailsModalTemplate!: TemplateRef<any>;
   @ViewChild('sidebarContent', { static: true }) sidebarContentTemplate!: TemplateRef<any>;
@@ -76,13 +82,14 @@ export class DashboardComponent implements OnInit {
 
     try {
       const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/assignedToUser/${user.username}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       this.tasksData = await response.json();
       this.tasksData = this.tasksData["tareasAsignadas"];
+      this.filteredTasksData = [...this.tasksData]; // Inicializar con todas las tareas
       console.log('Tasks loaded:', this.tasksData);
       console.log('First task structure:', this.tasksData[0]);
     } catch (error) {
@@ -93,13 +100,44 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getTasksByStatus(status: string): any[] {
+  // Nuevo método para filtrar tareas en tiempo real
+  filtrarTareas(): void {
     if (!this.tasksData || !Array.isArray(this.tasksData)) {
+      this.filteredTasksData = [];
+      return;
+    }
+
+    this.filteredTasksData = this.tasksData.filter((task: any) => {
+      const tituloMatch = !this.filtroTitulo ||
+        task.tarea.titulo?.toLowerCase().includes(this.filtroTitulo.toLowerCase());
+
+      const descripcionMatch = !this.filtroDescripcion ||
+        task.tarea.nota?.toLowerCase().includes(this.filtroDescripcion.toLowerCase());
+
+      const usuarioMatch = !this.filtroUsuarioAsignador ||
+        task.tarea.asignadoPor?.toLowerCase().includes(this.filtroUsuarioAsignador.toLowerCase());
+
+
+      return tituloMatch && descripcionMatch && usuarioMatch;
+    });
+
+  }
+
+  // Método para limpiar filtros
+  limpiarFiltros(): void {
+    this.filtroTitulo = '';
+    this.filtroDescripcion = '';
+    this.filtroUsuarioAsignador = '';
+    this.filtrarTareas();
+  }
+
+  getTasksByStatus(status: string): any[] {
+    if (!this.filteredTasksData || !Array.isArray(this.filteredTasksData)) {
       return [];
     }
-    
+
     // Filter tasks by status and sort by priority
-    return this.tasksData
+    return this.filteredTasksData
       .filter((task: any) => task.tarea.estado === status)
       .sort((a: any, b: any) => {
         // Tasks with personal priority (esPrioridad: true) come first
@@ -116,7 +154,7 @@ export class DashboardComponent implements OnInit {
 
   openEditDialog(task: any): void {
     this.selectedTask = task;
-    
+
     // Populate form with task data
     this.taskForm.patchValue({
       titulo: task.tarea.titulo,
@@ -156,10 +194,10 @@ export class DashboardComponent implements OnInit {
   // Toggle personal priority (star)
   async togglePersonalPriority(task: any): Promise<void> {
     const newPriorityValue = !task.asignacion.esPrioridad;
-    
+
     // Show loading toast
     const loadingToast = toast.loading('Actualizando prioridad...');
-    
+
     try {
       const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/priority/${task.asignacion.id}`, {
         method: 'PUT',
@@ -194,7 +232,7 @@ export class DashboardComponent implements OnInit {
     this.selectedTask = JSON.parse(JSON.stringify(task));
     // Store original data for comparison
     this.originalTaskData = JSON.parse(JSON.stringify(task));
-    
+
     this.alertDialogService.create({
       zTitle: 'Detalles de la Tarea',
       zDescription: 'Información completa y gestión de la tarea',
@@ -214,7 +252,7 @@ export class DashboardComponent implements OnInit {
   async updateTask(task: any): Promise<void> {
     console.log('updateTask called with:', task);
     console.log('Making PUT request to:', `https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`);
-    
+
     try {
       const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`, {
         method: 'PUT',
@@ -247,7 +285,7 @@ export class DashboardComponent implements OnInit {
     console.log('saveDetailsChanges called with:', this.selectedTask);
     console.log('Task estado:', this.selectedTask?.tarea?.estado);
     console.log('Task nota:', this.selectedTask?.tarea?.nota);
-    
+
     if (this.selectedTask) {
       // Validate notes length
       if (this.selectedTask.tarea.nota && this.selectedTask.tarea.nota.length > 400) {
@@ -258,18 +296,18 @@ export class DashboardComponent implements OnInit {
       // Check if there are changes
       const hasChanges = this.hasTaskChanges();
       console.log('Has changes:', hasChanges);
-      
+
       if (hasChanges) {
         // Show loading toast
         const loadingToast = toast.loading('Guardando cambios...');
-        
+
         try {
           console.log('Calling updateTask with:', this.selectedTask);
           await this.updateTask(this.selectedTask);
-          
+
           // Only update the original task data after successful API call
           this.updateOriginalTaskData(this.selectedTask);
-          
+
           // Update toast to success
           toast.success('Modificaciones guardadas', {
             id: loadingToast
@@ -290,7 +328,7 @@ export class DashboardComponent implements OnInit {
   // Update original task data in the tasks array
   private updateOriginalTaskData(updatedTask: any): void {
     if (!this.tasksData || !Array.isArray(this.tasksData)) return;
-    
+
     const taskIndex = this.tasksData.findIndex((task: any) => task.tarea.id === updatedTask.tarea.id);
     if (taskIndex !== -1) {
       // Update the original task with the modified data
@@ -302,18 +340,18 @@ export class DashboardComponent implements OnInit {
   // Check if task has changes
   private hasTaskChanges(): boolean {
     if (!this.selectedTask || !this.originalTaskData) return false;
-    
+
     // Compare the current task data with the original data
     const currentTask = this.selectedTask.tarea;
     const originalTask = this.originalTaskData.tarea;
-    
+
     // Check for changes in editable fields
     const hasEstadoChange = currentTask.estado !== originalTask.estado;
     const hasNotaChange = (currentTask.nota || '') !== (originalTask.nota || '');
-    
+
     console.log('Estado change:', hasEstadoChange, 'from', originalTask.estado, 'to', currentTask.estado);
     console.log('Nota change:', hasNotaChange, 'from', originalTask.nota, 'to', currentTask.nota);
-    
+
     return hasEstadoChange || hasNotaChange;
   }
 

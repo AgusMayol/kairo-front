@@ -37,7 +37,8 @@
 
 
             <button z-button zType="ghost" zFull
-                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities/{{ userName }}'">
                 <a href="/user-priorities/{{ userName }}" class="w-full h-full flex items-center justify-start">
                     Prioridades del usuario
                 </a>
@@ -184,8 +185,8 @@
 
                     <!-- Estado vacío para Pendiente -->
                     <div class="w-full flex items-center justify-center py-8 text-gray-400"
-                        *ngIf="!tasksData || getTasksByStatus('pendiente').length === 0">
-                        <p class="text-sm">No hay tareas asignadas</p>
+                        *ngIf="!tasksData || getTasksByPriority('alta').length === 0">
+                        <p class="text-sm">No hay tareas con prioridad alta</p>
                     </div>
                 </div>
 

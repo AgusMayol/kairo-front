@@ -273,14 +273,13 @@ export class DashboardComponent implements OnInit {
 
   // Toggle personal priority (star)
   async togglePersonalPriority(task: any): Promise<void> {
-    const newPriorityValue = !task.asignacion.esPrioridad;
 
     // Show loading toast
     const loadingToast = toast.loading('Actualizando prioridad...');
 
     try {
       const baseUrl = this.getApiUrl();
-      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.asignacion.id}`, {
+      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.tarea.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -290,9 +289,12 @@ export class DashboardComponent implements OnInit {
         })
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        task.asignacion.esPrioridad = newPriorityValue;
-        const message = newPriorityValue ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
+        const isCurrentPriority = responseData?.current;
+        task.asignacion.esPrioridad = isCurrentPriority;
+        const message = isCurrentPriority ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
         toast.success(message, {
           id: loadingToast
         });

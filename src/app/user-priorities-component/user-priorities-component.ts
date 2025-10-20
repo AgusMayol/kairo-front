@@ -287,7 +287,7 @@ export class UserPrioritiesComponent implements OnInit {
 
     try {
       const baseUrl = this.getApiUrl();
-      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.asignacion.id}`, {
+      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.tarea.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +300,7 @@ export class UserPrioritiesComponent implements OnInit {
       const responseData = await response.json();
 
       if (response.ok) {
-        const isCurrentPriority = !!responseData?.current;
+        const isCurrentPriority = responseData?.current;
         task.asignacion.esPrioridad = isCurrentPriority;
 
         if (!isCurrentPriority) {

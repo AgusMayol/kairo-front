@@ -5,6 +5,19 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 ## v2.0.0
 
 ### Funcionalidades nuevas
+- Pestaña "Solo prioridades personales": Permite visualizar unicamente tareas marcadas con una estrella.
+- Panel de ordenamiento personalizado: Permite ordenar las tareas tanto en el "tablero" como en "solo prioridades personales" por prioridad, fecha de vencimiento, fecha de creación. La selección persiste en el mismo navegador.
+- Buscador inteligente: Barra de búsqueda que permite filtrar en tiempo real tanto en el "tablero" como en "solo prioridades personales" por título, descripción y usuario asignador. Funciona en conjunto con el ordenamiento personalizado.
+
+### Cambios
+- Se optimizó la vista mobile para que los tableros se vean de manera horizontal.
+- Se omtimizó la vista desktop al momento de editar una tarea, para que esta ocupe correctamente la altura de la pantalla.
+
+
+
+## v2.0.0
+
+### Funcionalidades nuevas
 - Módulo Tablero funcional, dividido en tres columnas (Pendiente, En progreso y Completadas).
 - Tareas en forma de tarjetas, cada una con los detalles de la tarea y con botones de Prioridad (Estrella) y Ver detalles (Ojo).
 - Alerta de "Modificaiones guardadas" al modificar el estado o la nota de una tarea.

@@ -20,6 +20,6 @@ export const routes: Routes = [
     { path: 'register', component: RegisterComponent },
     { path: 'password-recovery', component: PasswordRecoveryComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-    { path: 'user-priorities/:id', component: UserPrioritiesComponent, canActivate: [authGuard] }
+    { path: 'user-priorities', component: UserPrioritiesComponent, canActivate: [authGuard] }
 
 ];

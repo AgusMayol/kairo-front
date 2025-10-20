@@ -11,10 +11,14 @@ import { ZardAlertDialogService } from '@shared/components/alert-dialog/alert-di
 import { ZardSheetService } from '@shared/components/sheet/sheet.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { ZardSelectItemComponent } from '@shared/components/select/select-item.component';
+import { ZardSelectComponent } from '@shared/components/select/select.component';
+import { ZardTooltipModule } from '@shared/components/tooltip/tooltip';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-dashboard-component',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardTooltipModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent, ZardSelectComponent, ZardSelectItemComponent],
   templateUrl: './dashboard-component.html',
   styleUrl: './dashboard-component.css'
 })
@@ -27,11 +31,10 @@ export class DashboardComponent implements OnInit {
   tasksData: any = null;
   filteredTasksData: any = null; // Nueva propiedad para tareas filtradas
   isLoading: boolean = true;
-
-  // Nuevas propiedades para filtros
-  filtroTitulo: string = '';
-  filtroDescripcion: string = '';
-  filtroUsuarioAsignador: string = '';
+  defaultValue = 'priority';
+  private readonly SORT_COOKIE_KEY = 'kairo_sort_order';
+  // Propiedad para filtro unificado
+  filtroGeneral: string = '';
 
   // Form properties
   taskForm: FormGroup;
@@ -46,7 +49,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(private router: Router, private fb: FormBuilder, private alertDialogService: ZardAlertDialogService, private sheetService: ZardSheetService) {
     const user = getSessionUser();
-    this.userName = user ? user.firstName : '';
+    this.userName = user ? user.username : '';
     this.name = user ? user.firstName : '';
     this.lastName = user ? user.lastName : '';
     this.email = user ? user.email : '';
@@ -69,7 +72,16 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.restoreSortFromCookie();
     this.loadTasks();
+  }
+
+  // Helper method to get the correct API URL based on environment
+  private getApiUrl(): string {
+    if (environment.production === false) {
+      return 'https://preview-kairo-backend.vercel.app';
+    }
+    return 'https://kairo-backend.vercel.app';
   }
 
   async loadTasks(): Promise<void> {
@@ -81,14 +93,17 @@ export class DashboardComponent implements OnInit {
     }
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/assignedToUser/${user.username}`);
+      const baseUrl = this.getApiUrl();
+      const endpoint = `${baseUrl}/api/tasks/assignedToUser/${user.username}`;
+
+      const response = await fetch(endpoint);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      this.tasksData = await response.json();
-      this.tasksData = this.tasksData["tareasAsignadas"];
+      const responseData = await response.json();
+      this.tasksData = responseData["tareasAsignadas"];
       this.filteredTasksData = [...this.tasksData]; // Inicializar con todas las tareas
       console.log('Tasks loaded:', this.tasksData);
       console.log('First task structure:', this.tasksData[0]);
@@ -100,56 +115,121 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // Nuevo método para filtrar tareas en tiempo real
+  // Método para filtrar tareas en tiempo real por título, descripción y usuario asignador
   filtrarTareas(): void {
     if (!this.tasksData || !Array.isArray(this.tasksData)) {
       this.filteredTasksData = [];
       return;
     }
 
+    if (!this.filtroGeneral || this.filtroGeneral.trim() === '') {
+      this.filteredTasksData = [...this.tasksData];
+      return;
+    }
+
+    const filtro = this.filtroGeneral.toLowerCase().trim();
+
     this.filteredTasksData = this.tasksData.filter((task: any) => {
-      const tituloMatch = !this.filtroTitulo ||
-        task.tarea.titulo?.toLowerCase().includes(this.filtroTitulo.toLowerCase());
+      const tituloMatch = task.tarea.titulo?.toLowerCase().includes(filtro);
+      const descripcionMatch = task.tarea.nota?.toLowerCase().includes(filtro);
+      const usuarioMatch = task.tarea.asignadoPor?.toLowerCase().includes(filtro);
 
-      const descripcionMatch = !this.filtroDescripcion ||
-        task.tarea.nota?.toLowerCase().includes(this.filtroDescripcion.toLowerCase());
-
-      const usuarioMatch = !this.filtroUsuarioAsignador ||
-        task.tarea.asignadoPor?.toLowerCase().includes(this.filtroUsuarioAsignador.toLowerCase());
-
-
-      return tituloMatch && descripcionMatch && usuarioMatch;
+      return tituloMatch || descripcionMatch || usuarioMatch;
     });
-
   }
 
   // Método para limpiar filtros
   limpiarFiltros(): void {
-    this.filtroTitulo = '';
-    this.filtroDescripcion = '';
-    this.filtroUsuarioAsignador = '';
+    this.filtroGeneral = '';
     this.filtrarTareas();
   }
+
 
   getTasksByStatus(status: string): any[] {
     if (!this.filteredTasksData || !Array.isArray(this.filteredTasksData)) {
       return [];
     }
 
-    // Filter tasks by status and sort by priority
+    // Filter tasks by status and apply custom sorting
     return this.filteredTasksData
       .filter((task: any) => task.tarea.estado === status)
       .sort((a: any, b: any) => {
-        // Tasks with personal priority (esPrioridad: true) come first
+        // 1) User priority always comes first
         if (a.asignacion.esPrioridad && !b.asignacion.esPrioridad) {
           return -1; // a comes before b
         }
         if (!a.asignacion.esPrioridad && b.asignacion.esPrioridad) {
           return 1; // b comes before a
         }
-        // If both have same priority status, maintain original order
-        return 0;
+        
+        // 2) If both have same user priority status, apply secondary sorting
+        return this.getSecondarySorting(a, b);
       });
+  }
+
+  // Secondary sorting based on select value
+  private getSecondarySorting(a: any, b: any): number {
+    switch (this.defaultValue) {
+      case 'priority':
+        return this.sortBySystemPriority(a, b);
+      case 'dueDate':
+        return this.sortByDueDate(a, b);
+      case 'creationDate':
+        return this.sortByCreationDate(a, b);
+      default:
+        return this.sortBySystemPriority(a, b);
+    }
+  }
+
+  // Sort by system priority (alta > media > baja)
+  private sortBySystemPriority(a: any, b: any): number {
+    const priorityOrder: { [key: string]: number } = { 'alta': 3, 'media': 2, 'baja': 1 };
+    const aPriority = priorityOrder[a.tarea.prioridad] || 0;
+    const bPriority = priorityOrder[b.tarea.prioridad] || 0;
+    return bPriority - aPriority; // Higher priority first
+  }
+
+  // Sort by due date (earliest first, null dates last)
+  private sortByDueDate(a: any, b: any): number {
+    const aDate = a.tarea.fechaVencimiento ? new Date(a.tarea.fechaVencimiento) : null;
+    const bDate = b.tarea.fechaVencimiento ? new Date(b.tarea.fechaVencimiento) : null;
+    
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1; // a goes last
+    if (!bDate) return -1; // b goes last
+    
+    return aDate.getTime() - bDate.getTime(); // Earlier dates first
+  }
+
+  // Sort by creation date (newest first)
+  private sortByCreationDate(a: any, b: any): number {
+    const aDate = new Date(a.tarea.fechaCreacion);
+    const bDate = new Date(b.tarea.fechaCreacion);
+    return bDate.getTime() - aDate.getTime(); // Newer dates first
+  }
+
+  // Persist and restore sort selection
+  onSortChange(value: string): void {
+    this.defaultValue = value;
+    this.setCookie(this.SORT_COOKIE_KEY, value, 365);
+  }
+
+  private restoreSortFromCookie(): void {
+    const cookieValue = this.getCookie(this.SORT_COOKIE_KEY);
+    const validValues = ['priority', 'dueDate', 'creationDate'];
+    if (cookieValue && validValues.includes(cookieValue)) {
+      this.defaultValue = cookieValue;
+    }
+  }
+
+  private setCookie(name: string, value: string, days: number): void {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+  }
+
+  private getCookie(name: string): string | null {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
   }
 
   openEditDialog(task: any): void {
@@ -199,13 +279,14 @@ export class DashboardComponent implements OnInit {
     const loadingToast = toast.loading('Actualizando prioridad...');
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/priority/${task.asignacion.id}`, {
-        method: 'PUT',
+      const baseUrl = this.getApiUrl();
+      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.asignacion.id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          esPrioridad: newPriorityValue
+          username: this.userName
         })
       });
 
@@ -250,11 +331,12 @@ export class DashboardComponent implements OnInit {
 
   // Update task via API
   async updateTask(task: any): Promise<void> {
+    const baseUrl = this.getApiUrl();
     console.log('updateTask called with:', task);
-    console.log('Making PUT request to:', `https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`);
+    console.log('Making PUT request to:', `${baseUrl}/api/tasks/${task.tarea.id}`);
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`, {
+      const response = await fetch(`${baseUrl}/api/tasks/${task.tarea.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -386,4 +468,5 @@ export class DashboardComponent implements OnInit {
     fallback: "",
     url: "/logo-simple.png",
   };
+
 }

@@ -11,10 +11,14 @@ import { ZardAlertDialogService } from '@shared/components/alert-dialog/alert-di
 import { ZardSheetService } from '@shared/components/sheet/sheet.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { ZardSelectItemComponent } from '@shared/components/select/select-item.component';
+import { ZardSelectComponent } from '@shared/components/select/select.component';
+import { ZardTooltipModule } from '@shared/components/tooltip/tooltip';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-user-priorities-component',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardTooltipModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent, ZardSelectComponent, ZardSelectItemComponent],
   templateUrl: './user-priorities-component.html',
   styleUrl: './user-priorities-component.css'
 })
@@ -25,7 +29,12 @@ export class UserPrioritiesComponent implements OnInit {
   email: string = '';
   currentRoute: string = '';
   tasksData: any = null;
+  filteredTasksData: any = null; // Nueva propiedad para tareas filtradas
   isLoading: boolean = true;
+  defaultValue = 'priority';
+  private readonly SORT_COOKIE_KEY = 'kairo_sort_order';
+  // Propiedad para filtro unificado
+  filtroGeneral: string = '';
 
   // Form properties
   taskForm: FormGroup;
@@ -40,7 +49,7 @@ export class UserPrioritiesComponent implements OnInit {
 
   constructor(private router: Router, private fb: FormBuilder, private alertDialogService: ZardAlertDialogService, private sheetService: ZardSheetService) {
     const user = getSessionUser();
-    this.userName = user ? user.firstName : '';
+    this.userName = user ? user.username : '';
     this.name = user ? user.firstName : '';
     this.lastName = user ? user.lastName : '';
     this.email = user ? user.email : '';
@@ -63,7 +72,16 @@ export class UserPrioritiesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.restoreSortFromCookie();
     this.loadTasks();
+  }
+
+  // Helper method to get the correct API URL based on environment
+  private getApiUrl(): string {
+    if (environment.production === false) {
+      return 'http://preview-kairo-backend.vercel.app';
+    }
+    return 'https://kairo-backend.vercel.app';
   }
 
   async loadTasks(): Promise<void> {
@@ -75,51 +93,149 @@ export class UserPrioritiesComponent implements OnInit {
     }
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/assignedToUser/${user.username}`);
+      const baseUrl = this.getApiUrl();
+      const endpoint = `${baseUrl}/api/tasks/priority/${user.username}`;
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      this.tasksData = await response.json();
-      this.tasksData = this.tasksData["tareasAsignadas"];
-      console.log('Tasks loaded:', this.tasksData);
-      console.log('First task structure:', this.tasksData[0]);
+      const responseData = await response.json();
+      console.log(responseData)
+      // For priority endpoint, the data structure might be different
+      this.tasksData = responseData.tareasAsignadas;
+      this.filteredTasksData = [...this.tasksData];
     } catch (error) {
-      console.error('Error loading tasks:', error);
-      toast.error('Error al cargar las tareas');
+      console.error('Error loading priority tasks:', error);
+      toast.error('Error al cargar las tareas prioritarias');
     } finally {
       this.isLoading = false;
     }
   }
 
 
-  getTasksByPriority(priority: string): any[] {
+  // Método para filtrar tareas en tiempo real por título, descripción y usuario asignador
+  filtrarTareas(): void {
     if (!this.tasksData || !Array.isArray(this.tasksData)) {
-      return [];
+      this.filteredTasksData = [];
+      return;
     }
-    return this.tasksData.filter((task: any) => task.tarea.prioridad === priority && task.asignacion.esPrioridad === true);
+
+    if (!this.filtroGeneral || this.filtroGeneral.trim() === '') {
+      this.filteredTasksData = [...this.tasksData];
+      return;
+    }
+
+    const filtro = this.filtroGeneral.toLowerCase().trim();
+
+    this.filteredTasksData = this.tasksData.filter((task: any) => {
+      const tituloMatch = task.tarea.titulo?.toLowerCase().includes(filtro);
+      const descripcionMatch = task.tarea.nota?.toLowerCase().includes(filtro);
+      const usuarioMatch = task.tarea.asignadoPor?.toLowerCase().includes(filtro);
+
+      return tituloMatch || descripcionMatch || usuarioMatch;
+    });
+  }
+
+  // Método para limpiar filtros
+  limpiarFiltros(): void {
+    this.filtroGeneral = '';
+    this.filtrarTareas();
   }
 
 
+
+  // Secondary sorting based on select value
+  private getSecondarySorting(a: any, b: any): number {
+    switch (this.defaultValue) {
+      case 'priority':
+        return this.sortBySystemPriority(a, b);
+      case 'dueDate':
+        return this.sortByDueDate(a, b);
+      case 'creationDate':
+        return this.sortByCreationDate(a, b);
+      default:
+        return this.sortBySystemPriority(a, b);
+    }
+  }
+
+  // Sort by system priority (alta > media > baja)
+  private sortBySystemPriority(a: any, b: any): number {
+    const priorityOrder: { [key: string]: number } = { 'alta': 3, 'media': 2, 'baja': 1 };
+    const aPriority = priorityOrder[a.tarea.prioridad] || 0;
+    const bPriority = priorityOrder[b.tarea.prioridad] || 0;
+    return bPriority - aPriority; // Higher priority first
+  }
+
+  // Sort by due date (earliest first, null dates last)
+  private sortByDueDate(a: any, b: any): number {
+    const aDate = a.tarea.fechaVencimiento ? new Date(a.tarea.fechaVencimiento) : null;
+    const bDate = b.tarea.fechaVencimiento ? new Date(b.tarea.fechaVencimiento) : null;
+    
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1; // a goes last
+    if (!bDate) return -1; // b goes last
+    
+    return aDate.getTime() - bDate.getTime(); // Earlier dates first
+  }
+
+  // Sort by creation date (newest first)
+  private sortByCreationDate(a: any, b: any): number {
+    const aDate = new Date(a.tarea.fechaCreacion);
+    const bDate = new Date(b.tarea.fechaCreacion);
+    return bDate.getTime() - aDate.getTime(); // Newer dates first
+  }
+
+  // Persist and restore sort selection
+  onSortChange(value: string): void {
+    this.defaultValue = value;
+    this.setCookie(this.SORT_COOKIE_KEY, value, 365);
+  }
+
+  private restoreSortFromCookie(): void {
+    const cookieValue = this.getCookie(this.SORT_COOKIE_KEY);
+    const validValues = ['priority', 'dueDate', 'creationDate'];
+    if (cookieValue && validValues.includes(cookieValue)) {
+      this.defaultValue = cookieValue;
+    }
+  }
+
+  private setCookie(name: string, value: string, days: number): void {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+  }
+
+  private getCookie(name: string): string | null {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
   getTasksByStatus(status: string): any[] {
-    if (!this.tasksData || !Array.isArray(this.tasksData)) {
+    if (!this.filteredTasksData || !Array.isArray(this.filteredTasksData)) {
       return [];
     }
 
-    // Filter tasks by status and sort by priority
-    return this.tasksData
+    // Filter tasks by status and apply custom sorting
+    return this.filteredTasksData
       .filter((task: any) => task.tarea.estado === status)
       .sort((a: any, b: any) => {
-        // Tasks with personal priority (esPrioridad: true) come first
+        // 1) User priority always comes first
         if (a.asignacion.esPrioridad && !b.asignacion.esPrioridad) {
           return -1; // a comes before b
         }
         if (!a.asignacion.esPrioridad && b.asignacion.esPrioridad) {
           return 1; // b comes before a
         }
-        // If both have same priority status, maintain original order
-        return 0;
+        
+        // 2) If both have same user priority status, apply secondary sorting
+        return this.getSecondarySorting(a, b);
       });
   }
 
@@ -164,25 +280,34 @@ export class UserPrioritiesComponent implements OnInit {
 
   // Toggle personal priority (star)
   async togglePersonalPriority(task: any): Promise<void> {
-    const newPriorityValue = !task.asignacion.esPrioridad;
+    console.log(task)
 
     // Show loading toast
     const loadingToast = toast.loading('Actualizando prioridad...');
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/priority/${task.asignacion.id}`, {
-        method: 'PUT',
+      const baseUrl = this.getApiUrl();
+      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.asignacion.id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          esPrioridad: newPriorityValue
+          username: this.userName
         })
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        task.asignacion.esPrioridad = newPriorityValue;
-        const message = newPriorityValue ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
+        const isCurrentPriority = !!responseData?.current;
+        task.asignacion.esPrioridad = isCurrentPriority;
+
+        if (!isCurrentPriority) {
+          this.removeTaskFromStateById(task.tarea.id);
+        }
+
+        const message = isCurrentPriority ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
         toast.success(message, {
           id: loadingToast
         });
@@ -194,6 +319,25 @@ export class UserPrioritiesComponent implements OnInit {
       toast.error('Error al actualizar la prioridad', {
         id: loadingToast
       });
+    }
+  }
+
+  // Remove a task (by tarea.id) from local containers and trigger change detection
+  private removeTaskFromStateById(tareaId: any): void {
+    if (!tareaId) return;
+
+    if (Array.isArray(this.tasksData)) {
+      const newTasks = this.tasksData.filter((t: any) => t?.tarea?.id !== tareaId);
+      if (newTasks.length !== this.tasksData.length) {
+        this.tasksData = newTasks;
+      }
+    }
+
+    if (Array.isArray(this.filteredTasksData)) {
+      const newFiltered = this.filteredTasksData.filter((t: any) => t?.tarea?.id !== tareaId);
+      if (newFiltered.length !== this.filteredTasksData.length) {
+        this.filteredTasksData = newFiltered;
+      }
     }
   }
 
@@ -221,11 +365,12 @@ export class UserPrioritiesComponent implements OnInit {
 
   // Update task via API
   async updateTask(task: any): Promise<void> {
+    const baseUrl = this.getApiUrl();
     console.log('updateTask called with:', task);
-    console.log('Making PUT request to:', `https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`);
+    console.log('Making PUT request to:', `${baseUrl}/api/tasks/${task.tarea.id}`);
 
     try {
-      const response = await fetch(`https://kairo-backend.vercel.app/api/tasks/${task.tarea.id}`, {
+      const response = await fetch(`${baseUrl}/api/tasks/${task.tarea.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -239,7 +384,13 @@ export class UserPrioritiesComponent implements OnInit {
       if (response.ok) {
         const responseData = await response.json();
         console.log('API Response data:', responseData);
-        // Don't reload tasks data - we'll update manually
+        // Update local state immediately using server response if present
+        if (responseData && responseData.id) {
+          this.applyUpdatedTarea(responseData);
+        } else {
+          // Fallback: use the task we sent (in case API doesn't return the entity)
+          this.applyUpdatedTarea(task.tarea);
+        }
       } else {
         const errorText = await response.text();
         console.error('Error response:', errorText);
@@ -296,15 +447,68 @@ export class UserPrioritiesComponent implements OnInit {
     }
   }
 
-  // Update original task data in the tasks array
+  // Update original task data in the tasks array and filtered copy
   private updateOriginalTaskData(updatedTask: any): void {
-    if (!this.tasksData || !Array.isArray(this.tasksData)) return;
+    this.updateLocalTaskContainer(updatedTask);
+  }
 
-    const taskIndex = this.tasksData.findIndex((task: any) => task.tarea.id === updatedTask.tarea.id);
-    if (taskIndex !== -1) {
-      // Update the original task with the modified data
-      this.tasksData[taskIndex] = { ...updatedTask };
-      console.log('Original task data updated in array');
+  // Apply an updated tarea entity into the local containers
+  private applyUpdatedTarea(updatedTarea: any): void {
+    if (!updatedTarea || !updatedTarea.id) return;
+
+    const containerItem = this.findTaskContainerByTareaId(updatedTarea.id);
+    if (!containerItem) return;
+
+    // Merge updated fields into the container's tarea
+    containerItem.tarea = { ...containerItem.tarea, ...updatedTarea };
+    // Reflect in both arrays
+    this.updateLocalTaskContainer(containerItem);
+  }
+
+  // Find the wrapper object that contains tarea by id (from either array)
+  private findTaskContainerByTareaId(tareaId: any): any | null {
+    if (Array.isArray(this.tasksData)) {
+      const found = this.tasksData.find((t: any) => t?.tarea?.id === tareaId);
+      if (found) return found;
+    }
+    if (Array.isArray(this.filteredTasksData)) {
+      const found = this.filteredTasksData.find((t: any) => t?.tarea?.id === tareaId);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Replace the task container in both arrays and trigger change detection
+  private updateLocalTaskContainer(updatedContainer: any): void {
+    if (!updatedContainer || !updatedContainer.tarea) return;
+
+    let changed = false;
+    if (Array.isArray(this.tasksData)) {
+      const idx = this.tasksData.findIndex((t: any) => t?.tarea?.id === updatedContainer.tarea.id);
+      if (idx !== -1) {
+        this.tasksData = [
+          ...this.tasksData.slice(0, idx),
+          { ...updatedContainer },
+          ...this.tasksData.slice(idx + 1)
+        ];
+        changed = true;
+      }
+    }
+
+    if (Array.isArray(this.filteredTasksData)) {
+      const fIdx = this.filteredTasksData.findIndex((t: any) => t?.tarea?.id === updatedContainer.tarea.id);
+      if (fIdx !== -1) {
+        this.filteredTasksData = [
+          ...this.filteredTasksData.slice(0, fIdx),
+          { ...updatedContainer },
+          ...this.filteredTasksData.slice(fIdx + 1)
+        ];
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      console.log('Local task updated in state containers');
     }
   }
 

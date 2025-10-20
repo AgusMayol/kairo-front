@@ -29,7 +29,8 @@
             </button>
 
             <button z-button zType="ghost" zFull
-                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/reports'">
                 <!-- <a href="#" class="w-full h-full flex items-center justify-start"> -->
                 Reportes
                 <!-- </a> -->
@@ -37,8 +38,9 @@
 
 
             <button z-button zType="ghost" zFull
-                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
-                <a href="/user-priorities/{{ userName }}" class="w-full h-full flex items-center justify-start">
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <a href="/user-priorities" class="w-full h-full flex items-center justify-start">
                     Prioridades del usuario
                 </a>
             </button>
@@ -76,10 +78,10 @@
     </div>
 
     <!-- Main -->
-    <main class="col-span-16 md:col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-8">
+    <main class="col-span-16 md:col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-4">
 
         <!-- Mobile Menu Button -->
-        <div class="w-full flex justify-start md:hidden p-4">
+        <div class="w-full flex justify-start md:hidden">
             <button (click)="openMobileSheet()"
                 class="p-2 rounded-md bg-white border shadow-sm hover:shadow-md transition-shadow">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,31 +104,44 @@
             </div>
         </div>
 
-
-        <div>
-            <h2 style="text-align: center;">Filtros</h2>
-            <div class="space-y-3">
-                <input type="text" placeholder="Título de tarea" class="border border-gray-300 rounded-md p-2 w-full"
-                    [(ngModel)]="filtroTitulo" (input)="filtrarTareas()" />
-                <input type="text" placeholder="Descripción de tarea"
-                    class="border border-gray-300 rounded-md p-2 w-full" [(ngModel)]="filtroDescripcion"
-                    (input)="filtrarTareas()" />
-                <input type="text" placeholder="Usuario asignador" class="border border-gray-300 rounded-md p-2 w-full"
-                    [(ngModel)]="filtroUsuarioAsignador" (input)="filtrarTareas()" />
-                <button type="button"
-                    class="w-full bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition-colors"
-                    (click)="limpiarFiltros()">
-                    Limpiar Filtros
-                </button>
-            </div>
-            <h2 *ngIf="filteredTasksData?.length === 0">No se encontraron tareas filtradas con ese criterio.</h2>
-        </div>
-
         <!-- Tasks Content -->
-        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-start justify-start gap-2"
+        <div class="border w-full h-full shadow-sm rounded-lg p-4 py-8 md:p-8 bg-white flex flex-col items-start justify-start gap-2"
             *ngIf="!isLoading">
 
-            <div class="w-full h-full grid grid-cols-1 grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
+            <div class="w-full flex flex-col items-start md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-4 -mt-2">
+                <div class="max-w-lg w-full">
+                    <div class="flex items-end gap-2">
+                        <div class="w-full flex flex-col gap-0.5">
+                            <label for="searchBar" class="text-xs font-medium">Buscar por</label>
+                            <input id="searchBar" type="text" placeholder="Título, descripción o asignador..." class="border border-gray-300 rounded-md px-2 w-full placeholder:text-muted-foreground placeholder:text-sm h-9"
+                                [(ngModel)]="filtroGeneral" (input)="filtrarTareas()" />
+                        </div>
+                        
+                        <button type="button" z-button zSize="icon" zType="secondary" zPosition="bottom"
+                            class=""
+                            zTooltip="Limpiar búsqueda" zTrigger="hover"
+                            (click)="limpiarFiltros()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                    <span class="text-red-700 text-xs -mt-4" *ngIf="filteredTasksData?.length === 0">No se encontraron tareas con ese criterio.</span>
+                </div>
+
+                <div class="max-w-[250px] w-full flex items-end gap-2">
+                    <div class="w-full flex flex-col gap-0.5">
+                        <label for="searchBar" class="text-xs font-medium">Ordenar por</label>
+                        <z-select zPlaceholder="Seleccione ordenamiento" [(ngModel)]="defaultValue" (ngModelChange)="onSortChange($event)">
+                            <z-select-item zValue="priority" class="">Prioridad del sistema</z-select-item>
+                            <z-select-item zValue="dueDate" class="mt-1">Fecha de vencimiento</z-select-item>
+                            <z-select-item zValue="creationDate" class="mt-1">Fecha de creación</z-select-item>
+                        </z-select>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div class="w-full h-full overflow-x-auto md:overflow-visible">
+            <div class="inline-grid h-full grid-rows-1 grid-flow-col auto-cols-[minmax(300px,85vw)] md:grid-flow-row md:auto-cols-auto md:grid-cols-3 gap-12">
 
                 <!-- Columna Pendiente -->
                 <div class="rounded-lg h-full flex flex-col items-center justify-start gap-4">
@@ -372,6 +387,7 @@
                 </div>
 
             </div>
+            </div>
 
         </div>
 
@@ -502,7 +518,7 @@
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" [ngClass]="{
                         'bg-yellow-100 text-yellow-800': selectedTask?.tarea.estado === 'pendiente',
                         'bg-blue-100 text-blue-800': selectedTask?.tarea.estado === 'en progreso',
-                        'bg-green-100 text-green-800': selectedTask?.tarea.estado === 'terminado'
+                        'bg-green-100 text-green-800': selectedTask?.tarea.estado === 'completada'
                       }">
                     {{ selectedTask?.tarea.estado | titlecase }}
                 </span>
@@ -566,8 +582,19 @@
             </button>
 
             <button z-button zType="ghost" zFull
-                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
-                Prioridades
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <!-- <a href="/user-priorities" class="w-full h-full flex items-center justify-start"> -->
+                    Reportes
+                <!-- </a> -->
+            </button>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <a href="/user-priorities" class="w-full h-full flex items-center justify-start">
+                    Prioridades del usuario
+                </a>
             </button>
         </div>
 

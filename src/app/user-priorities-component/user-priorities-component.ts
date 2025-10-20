@@ -79,7 +79,7 @@ export class UserPrioritiesComponent implements OnInit {
   // Helper method to get the correct API URL based on environment
   private getApiUrl(): string {
     if (environment.production === false) {
-      return 'http://preview-kairo-backend.vercel.app';
+      return 'https://preview-kairo-backend.vercel.app';
     }
     return 'https://kairo-backend.vercel.app';
   }
@@ -137,7 +137,7 @@ export class UserPrioritiesComponent implements OnInit {
 
     this.filteredTasksData = this.tasksData.filter((task: any) => {
       const tituloMatch = task.tarea.titulo?.toLowerCase().includes(filtro);
-      const descripcionMatch = task.tarea.nota?.toLowerCase().includes(filtro);
+      const descripcionMatch = task.tarea.descripcion?.toLowerCase().includes(filtro);
       const usuarioMatch = task.tarea.asignadoPor?.toLowerCase().includes(filtro);
 
       return tituloMatch || descripcionMatch || usuarioMatch;

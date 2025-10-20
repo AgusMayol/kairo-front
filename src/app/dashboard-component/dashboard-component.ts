@@ -131,7 +131,7 @@ export class DashboardComponent implements OnInit {
 
     this.filteredTasksData = this.tasksData.filter((task: any) => {
       const tituloMatch = task.tarea.titulo?.toLowerCase().includes(filtro);
-      const descripcionMatch = task.tarea.nota?.toLowerCase().includes(filtro);
+      const descripcionMatch = task.tarea.descripcion?.toLowerCase().includes(filtro);
       const usuarioMatch = task.tarea.asignadoPor?.toLowerCase().includes(filtro);
 
       return tituloMatch || descripcionMatch || usuarioMatch;

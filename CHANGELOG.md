@@ -2,7 +2,7 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
-## v2.0.0
+## v3.0.0
 
 ### Funcionalidades nuevas
 - Pestaña "Solo prioridades personales": Permite visualizar unicamente tareas marcadas con una estrella.

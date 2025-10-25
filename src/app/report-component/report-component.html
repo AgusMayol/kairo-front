@@ -1,0 +1,222 @@
+<div class="w-full min-h-screen grid grid-cols-16">
+    <!-- Sidebar -->
+    <div class="col-span-3 border-r p-4 bg-sidebar hidden md:flex flex-col items-center justify-between gap-8">
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
+                <div class="w-full flex items-center justify-start gap-2">
+                    <z-avatar zType="outline" zSize="sm" zShape="circle" class="" [zImage]="zKairo" />
+                    <div class="flex flex-col items-start justify-start gap-0 truncate">
+                        <h2 class="w-full text-base text-start font-medium text-pretty truncate">Kairo by Flowbit</h2>
+                        <span class="w-full text-xs text-muted-foreground truncate text-start">
+                            Task Manager
+                        </span>
+                    </div>
+
+                </div>
+                <!-- </a> -->
+            </button>
+            <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
+                <z-divider />
+            </div>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/dashboard'">
+                <a href="/dashboard" class="w-full h-full flex items-center justify-start">
+                    Tablero
+                </a>
+            </button>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/report'">
+                <a href="/report" class="w-full h-full flex items-center justify-start">
+                    Reportes
+                </a>
+            </button>
+
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <a href="/user-priorities" class="w-full h-full flex items-center justify-start">
+                    Prioridades del usuario
+                </a>
+            </button>
+
+        </div>
+
+
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <div
+                class="border w-full h-full shadow-sm rounded-lg p-2 bg-white flex flex-col items-start justify-start gap-2">
+
+                <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                    <!-- <a href="" class="w-full h-full flex items-center justify-between"> -->
+                    <div class="w-full flex items-center justify-start gap-2">
+                        <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-1.5 *:rounded-none"
+                            [zImage]="zImageDefault" />
+                        <div class="flex flex-col items-start justify-start gap-0.5 truncate">
+                            <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{
+                                lastName }}</h2>
+                            <span class="w-full text-xs text-muted-foreground truncate text-start">
+                                {{ email }}
+                            </span>
+                        </div>
+
+                    </div>
+                    <!-- </a> -->
+                </button>
+
+
+                <button (click)="logout()"
+                    class="w-full truncate h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Cerrar
+                    sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <main class="col-span-16 md:col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-4">
+
+
+
+
+        <!-- Charts Container -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Pie Chart -->
+            <div class="border shadow-sm rounded-lg p-4 bg-white">
+                <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Distribución de Tareas</h3>
+                <div class="chart-container">
+                    <canvas id="MyChart">{{ chart }}</canvas>
+                </div>
+            </div>
+
+            <!-- Gauge Chart -->
+            <div class="border shadow-sm rounded-lg p-4 bg-white">
+                <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Tasa de Productividad</h3>
+                <div class="chart-container">
+                    <canvas id="ProductivityGauge">{{ productivityGauge }}</canvas>
+                </div>
+                <div class="text-center mt-4">
+                    <p class="text-sm text-gray-600">Productividad: {{ productivityRate }}%</p>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu Button -->
+        <div class="w-full flex justify-start md:hidden">
+            <button (click)="openMobileSheet()"
+                class="p-2 rounded-md bg-white border shadow-sm hover:shadow-md transition-shadow">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-center justify-center gap-4"
+            *ngIf="isLoading">
+            <div class="flex flex-col items-center justify-center gap-4">
+                <!-- Spinner -->
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Cargando tareas...</h3>
+                    <p class="text-sm text-gray-500 mt-1">Por favor espera mientras obtenemos tus tareas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Content -->
+        <div class="border w-full h-full shadow-sm rounded-lg p-4 py-8 md:p-8 bg-white flex flex-col items-start justify-start gap-2"
+            *ngIf="!isLoading">
+
+
+
+            <div
+                class="w-full flex flex-col items-start md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-4 -mt-2">
+
+            </div>
+
+
+
+
+        </div>
+
+    </main>
+</div>
+
+<!-- Sidebar Content Template for Mobile Sheet -->
+<ng-template class="bg-sidebar w-full h-full" #sidebarContent>
+    <div class="w-full h-full bg-sidebar flex flex-col items-center justify-between gap-8 p-4">
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                <div class="w-full flex items-center justify-start gap-2">
+                    <z-avatar zType="outline" zSize="sm" zShape="circle" class="" [zImage]="zKairo" />
+                    <div class="flex flex-col items-start justify-start gap-0 truncate">
+                        <h2 class="w-full text-base text-start font-medium text-pretty truncate">Kairo by Flowbit</h2>
+                        <span class="w-full text-xs text-muted-foreground truncate text-start">
+                            Task Manager
+                        </span>
+                    </div>
+                </div>
+            </button>
+            <div class="w-full flex items-center justify-start gap-2 -mt-4 -mb-4">
+                <z-divider />
+            </div>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/dashboard'">
+                <a href="/dashboard" class="w-full h-full flex items-center justify-start">
+                    Tablero
+                </a>
+            </button>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
+                Reportes
+            </button>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <!-- <a href="/user-priorities" class="w-full h-full flex items-center justify-start"> -->
+                Reportes
+                <!-- </a> -->
+            </button>
+
+            <button z-button zType="ghost" zFull
+                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
+                [attr.data-active]="currentRoute === '/user-priorities'">
+                <a href="/user-priorities" class="w-full h-full flex items-center justify-start">
+                    Prioridades del usuario
+                </a>
+            </button>
+        </div>
+
+        <div class="w-full flex flex-col items-center justify-start gap-4">
+            <div
+                class="border w-full h-full shadow-sm rounded-lg p-2 bg-white flex flex-col items-start justify-start gap-2">
+                <button z-button zType="ghost" zFull class="w-full items-start justify-start h-auto p-1">
+                    <div class="w-full flex items-center justify-start gap-2">
+                        <z-avatar zType="outline" zSize="sm" zShape="circle" class="*:p-1.5 *:rounded-none"
+                            [zImage]="zImageDefault" />
+                        <div class="flex flex-col items-start justify-start gap-0.5 truncate">
+                            <h2 class="w-full text-sm text-start font-medium text-pretty truncate">{{ name }} {{
+                                lastName }}</h2>
+                            <span class="w-full text-xs text-muted-foreground truncate text-start">
+                                {{ email }}
+                            </span>
+                        </div>
+                    </div>
+                </button>
+
+                <button (click)="logout()"
+                    class="w-full truncate h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Cerrar
+                    sesión</button>
+            </div>
+        </div>
+    </div>
+</ng-template>

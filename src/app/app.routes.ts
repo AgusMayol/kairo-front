@@ -5,6 +5,7 @@ import { PasswordRecoveryComponent } from './password-recovery-component/passwor
 import { DashboardComponent } from './dashboard-component/dashboard-component';
 import { UserPrioritiesComponent } from './user-priorities-component/user-priorities-component';
 import { hasSession } from './auth.util';
+import { ReportComponent } from './report-component/report-component';
 
 export const authGuard: CanActivateFn = () => {
     if (hasSession()) {
@@ -20,6 +21,7 @@ export const routes: Routes = [
     { path: 'register', component: RegisterComponent },
     { path: 'password-recovery', component: PasswordRecoveryComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-    { path: 'user-priorities', component: UserPrioritiesComponent, canActivate: [authGuard] }
+    { path: 'user-priorities', component: UserPrioritiesComponent, canActivate: [authGuard] },
+    { path: 'report', component: ReportComponent, canActivate: [authGuard] }
 
 ];

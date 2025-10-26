@@ -160,7 +160,7 @@
                         </div>
 
                         <!-- Tareas Pendientes -->
-                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0" *ngIf="getTasksByStatus('pendiente').length > 0">
+                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0 pb-4" *ngIf="getTasksByStatus('pendiente').length > 0">
                             <div *ngFor="let task of getTasksByStatus('pendiente')"
                                 class="border w-full rounded-lg p-3 bg-white hover:shadow-md transition-shadow"
                                 [ngClass]="{
@@ -246,7 +246,7 @@
                         </div>
 
                         <!-- Tareas En Progreso -->
-                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0" *ngIf="getTasksByStatus('en progreso').length > 0">
+                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0 pb-4" *ngIf="getTasksByStatus('en progreso').length > 0">
                             <div *ngFor="let task of getTasksByStatus('en progreso')"
                                 class="border w-full rounded-lg p-3 bg-white hover:shadow-md transition-shadow"
                                 [ngClass]="{
@@ -332,7 +332,7 @@
                         </div>
 
                         <!-- Tareas Completadas -->
-                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0" *ngIf="getTasksByStatus('completada').length > 0">
+                        <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0 pb-4" *ngIf="getTasksByStatus('completada').length > 0">
                             <div *ngFor="let task of getTasksByStatus('completada')"
                                 class="border w-full shadow-sm rounded-lg p-3 bg-white hover:shadow-md transition-shadow">
                                 <div class="flex items-start justify-between gap-2">

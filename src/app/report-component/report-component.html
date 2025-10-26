@@ -141,7 +141,7 @@
                     </div>
 
                     <!-- Tareas Vencidas -->
-                    <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0" *ngIf="getOverdueTasks().length > 0">
+                    <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0 pb-4" *ngIf="getOverdueTasks().length > 0">
                         <div *ngFor="let task of getOverdueTasks()"
                             class="border w-full rounded-lg p-3 bg-white hover:shadow-md transition-shadow"
                             [ngClass]="{

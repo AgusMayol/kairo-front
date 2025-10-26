@@ -2,6 +2,28 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
+## v4.0.0
+
+### Funcionalidades nuevas
+- Módulo de reportes con resumen por estado, reporte histórico de vencimientos e indicador de productividad.
+- Resaltado de coincidencias en el buscador: Cuando se utiliza el buscador en Tablero y Prioridades del Usuario, las coincidencias en títulos y asignadores se resaltan visualmente, facilitando la identificación rápida de resultados. (No disponible para descripción de la tarjeta, unicamente para título y usuario asignador).
+
+### Cambios
+- Grandes mejoras en el diseño mobile, tablet y desktop para una mejor usabilidad del sistema. Ahora cuenta tamaños de pantalla predefinidos, scroll verticales y horizontales donde corresponda.
+- Optimización general al momento de modificar los estados de una tarjeta. Disponible en los tres modulos.
+
+### Arreglos
+- BUG-0004 | TC-062: Cambio de estado no guardado refleja el estado incorrecto en tarjeta. Ahora, al modificar un estado no modifica su "estado actual" hasta que se guardan los cambios.
+- BUG-0005 | TC-015: El layout se rompe al concentrar todas las tareas en una sola columna. Ahora, la altura de los contenedores está predefinida por el alto de cada navegador. Dentro de cada columna, las tarjetas aparecen dentro de un scroll vertical, permitiendo navegar correctamente sin romper el layout.
+- BUG-0006 | TC4 -  TM07: Al exceder los 400 caracteres no aparece la laerta de límite máximo. Ahora, la alerta figura correctamente.
+- BUG-0008 | TC-009: Al cambiar el estado de una tarea no se actualiza en el momento y vuelve a su estado original. Se arregló un pequeño bug que no modificaba la variable local específicamente en el módulo de tablero. Ahora, al guardar los cambios en el módulo tablero la actualización es inmediata.
+- BUG-0009 | TC-0047: Al cerrar sesión en una pestaña, el sistema permite seguir haciendo cambios en otras. Cuando un usuario cierra sesión en una pestaña, ahora automáticamente se cierra la sesión en todas las demás pestañas o ventanas abiertas del tablero, previniendo modificaciones no autorizadas.
+- BUG-0010: Al momento de escribir en el filtro por ejemplo el nombre del asignador, si bien muestra las tareas no las resalta. Gracias a la nueva función implementada en esta versión, ahora si funciona el destacado de coincidencias. (No disponible para descripción de la tarjeta, unicamente para título y usuario asignador).
+- BUG-TM2-02 | TC3-TM08: En vista mobile se muestran opciones duplicadas ('Reportes') en el menú lateral. Ahora, solo figura un solo ítem en el menú lateral del mobile.
+
+
+
+
 ## v3.0.0
 
 ### Funcionalidades nuevas

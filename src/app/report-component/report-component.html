@@ -78,34 +78,10 @@
     </div>
 
     <!-- Main -->
-    <main class="col-span-16 md:col-span-13 shadow-sm p-2 bg-sidebar flex flex-col items-center justify-center gap-4">
+    <main class="col-span-16 md:col-span-13 grid grid-cols-2 shadow-sm p-2 bg-sidebar gap-2 md:h-screen md:grid-rows-[auto_1fr] md:overflow-hidden">
 
-
-
-
-        <!-- Charts Container -->
-        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Pie Chart -->
-            <div class="border shadow-sm rounded-lg p-4 bg-white">
-                <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Distribución de Tareas</h3>
-                <div class="chart-container">
-                    <canvas id="MyChart">{{ chart }}</canvas>
-                </div>
-            </div>
-
-            <!-- Gauge Chart -->
-            <div class="border shadow-sm rounded-lg p-4 bg-white">
-                <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">Tasa de Productividad</h3>
-                <div class="chart-container">
-                    <canvas id="ProductivityGauge">{{ productivityGauge }}</canvas>
-                </div>
-                <div class="text-center mt-4">
-                    <p class="text-sm text-gray-600">Productividad: {{ productivityRate }}%</p>
-                </div>
-            </div>
-        </div>
         <!-- Mobile Menu Button -->
-        <div class="w-full flex justify-start md:hidden">
+        <div class="col-span-full w-full flex justify-start md:hidden">
             <button (click)="openMobileSheet()"
                 class="p-2 rounded-md bg-white border shadow-sm hover:shadow-md transition-shadow">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +92,7 @@
         </div>
 
         <!-- Loading State -->
-        <div class="border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-center justify-center gap-4"
+        <div class="col-span-full row-span-full border w-full h-full shadow-sm rounded-lg p-8 bg-white flex flex-col items-center justify-center gap-4"
             *ngIf="isLoading">
             <div class="flex flex-col items-center justify-center gap-4">
                 <!-- Spinner -->
@@ -128,15 +104,128 @@
             </div>
         </div>
 
+        <!-- Charts Container -->
+        <div class="col-span-2 md:col-span-1 w-full grid grid-cols-1 grid-rows-2 gap-2 md:row-start-2 md:min-h-0 md:overflow-hidden" *ngIf="!isLoading">
+            <!-- Pie Chart -->
+            <div class="border w-full shadow-sm rounded-lg bg-white flex flex-col p-4 md:p-6 md:min-h-0 md:overflow-hidden">
+                <h3 class="text-base md:text-lg font-medium text-gray-900 mb-2 md:mb-4 text-center flex-shrink-0">Distribución de Tareas</h3>
+                <div class="chart-container flex-1 relative flex items-center justify-center min-h-0 overflow-hidden">
+                    <canvas id="MyChart" class="!max-w-full !max-h-full"></canvas>
+                </div>
+            </div>
+
+            <!-- Gauge Chart -->
+            <div class="border w-full shadow-sm rounded-lg bg-white flex flex-col p-4 md:p-6 md:min-h-0 md:overflow-hidden">
+                <h3 class="text-base md:text-lg font-medium text-gray-900 mb-2 md:mb-4 text-center flex-shrink-0">Tasa de Productividad</h3>
+                <div class="chart-container flex-1 relative flex items-center justify-center min-h-0 overflow-hidden">
+                    <canvas id="ProductivityGauge" class="!max-w-full !max-h-full"></canvas>
+                </div>
+                <div class="text-center mt-2 flex-shrink-0">
+                    <p class="text-sm text-gray-600 font-medium">Productividad: {{ productivityRate }}%</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Tasks Content -->
-        <div class="border w-full h-full shadow-sm rounded-lg p-4 py-8 md:p-8 bg-white flex flex-col items-start justify-start gap-2"
+        <div class="col-span-2 md:col-span-1 border w-full shadow-sm rounded-lg p-4 py-8 md:p-8 bg-white flex flex-col items-start justify-start gap-2 md:row-start-2 md:min-h-0"
             *ngIf="!isLoading">
 
+            <!-- Columna Vencidas -->
+            <div class="w-full overflow-x-auto md:overflow-visible md:flex-1 md:min-h-0">
+                <div class="rounded-lg flex flex-col items-center justify-start gap-4 md:h-full md:min-h-0">
+                    <div
+                        class="border w-full shadow-sm rounded-lg p-4 py-6 bg-red-100 text-red-800 flex flex-col items-center justify-center gap-2">
+                        <h2 class="text-xl text-center font-medium text-pretty">
+                            Historial tareas vencidas
+                        </h2>
+                    </div>
 
+                    <!-- Tareas Vencidas -->
+                    <div class="w-full flex flex-col gap-2 md:overflow-y-auto md:flex-1 md:min-h-0" *ngIf="getOverdueTasks().length > 0">
+                        <div *ngFor="let task of getOverdueTasks()"
+                            class="border w-full rounded-lg p-3 bg-white hover:shadow-md transition-shadow"
+                            [ngClass]="{
+                                'shadow-red-500/50 shadow-md': task.tarea.estado !== 'completada',
+                                'shadow-sm': task.tarea.estado === 'completada'
+                            }">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-medium text-gray-900 truncate">{{ task.tarea.titulo }}
+                                    </h3>
 
-            <div
-                class="w-full flex flex-col items-start md:flex-row md:items-center justify-between gap-4 md:gap-8 mb-4 -mt-2">
+                                    <!-- Prioridad del sistema -->
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                            [ngClass]="{
+                                            'bg-red-100 text-red-800': task.tarea.prioridad === 'alta',
+                                            'bg-yellow-100 text-yellow-800': task.tarea.prioridad === 'media',
+                                            'bg-green-100 text-green-800': task.tarea.prioridad === 'baja'
+                                          }">
+                                            {{ task.tarea.prioridad | titlecase }}
+                                        </span>
+                                    </div>
 
+                                    <!-- Fecha de vencimiento -->
+                                    <p class="text-xs text-red-600 font-medium mt-1" *ngIf="task.tarea.fechaVencimiento">
+                                        Vencida el: {{ task.tarea.fechaVencimiento | date:'dd/MM/yyyy' }}
+                                    </p>
+
+                                    <!-- Completada el (solo para tareas completadas) -->
+                                    <p class="text-xs text-green-600 font-medium mt-1" *ngIf="task.tarea.estado === 'completada'">
+                                        Completada el: {{ task.tarea.ultimaActualizacion | date:'dd/MM/yyyy' }}
+                                    </p>
+
+                                    <!-- Estado actual (solo para no completadas) -->
+                                    <p class="text-xs text-gray-500 mt-1" *ngIf="task.tarea.estado !== 'completada'">
+                                        Estado: {{ task.tarea.estado | titlecase }}
+                                    </p>
+
+                                    <!-- Asignada por -->
+                                    <p class="text-xs text-gray-500 mt-1" *ngIf="task.tarea.asignadoPor">
+                                        Asignada por: {{ task.tarea.asignadoPor }}
+                                    </p>
+
+                                    <!-- Botones de acción -->
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <button (click)="togglePersonalPriority(task)" class="p-1 transition-colors"
+                                            [class]="task.asignacion.esPrioridad ? 'text-yellow-500' : 'text-gray-400'"
+                                            [title]="task.asignacion.esPrioridad ? 'Quitar de prioridades' : 'Agregar a prioridades'">
+                                            <svg class="w-4 h-4"
+                                                [attr.fill]="task.asignacion.esPrioridad ? 'currentColor' : 'none'"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+                                                </path>
+                                            </svg>
+                                        </button>
+
+                                        <button (click)="openDetailsModal(task)"
+                                            class="p-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                            title="Ver detalles">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado vacío para Vencidas -->
+                    <div class="w-full flex items-center justify-center py-8 text-gray-400"
+                        *ngIf="!tasksData || getOverdueTasks().length === 0">
+                        <p class="text-sm">No tenés tareas vencidas</p>
+                    </div>
+                </div>
             </div>
 
 
@@ -175,16 +264,11 @@
             </button>
 
             <button z-button zType="ghost" zFull
-                class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground">
-                Reportes
-            </button>
-
-            <button z-button zType="ghost" zFull
                 class="w-full items-start justify-start !text-muted-foreground data-[active='true']:!text-foreground"
-                [attr.data-active]="currentRoute === '/user-priorities'">
-                <!-- <a href="/user-priorities" class="w-full h-full flex items-center justify-start"> -->
-                Reportes
-                <!-- </a> -->
+                [attr.data-active]="currentRoute === '/report'">
+                <a href="/report" class="w-full h-full flex items-center justify-start">
+                    Reportes
+                </a>
             </button>
 
             <button z-button zType="ghost" zFull
@@ -217,6 +301,111 @@
                     class="w-full truncate h-10 px-8 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97] select-none text-foreground [text-shadow:0_1px_0_#FDE3BA] from-[#FDE3BA]/85 to-[#FDE3BA] inset-shadow-2xs inset-shadow-white/25 bg-linear-to-b border border-zinc-950/35 shadow-zinc-950/20 ring-0 duration-200 hover:brightness-110 active:brightness-95 cursor-pointer">Cerrar
                     sesión</button>
             </div>
+        </div>
+    </div>
+</ng-template>
+
+<!-- Task Details Modal Template -->
+<ng-template #taskDetailsModal>
+    <div class="space-y-6">
+        <!-- Información básica -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">{{ selectedTask?.tarea.titulo }}</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" [ngClass]="{
+                        'bg-red-100 text-red-800': selectedTask?.tarea.prioridad === 'alta',
+                        'bg-yellow-100 text-yellow-800': selectedTask?.tarea.prioridad === 'media',
+                        'bg-green-100 text-green-800': selectedTask?.tarea.prioridad === 'baja'
+                      }">
+                    {{ selectedTask?.tarea.prioridad | titlecase }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Descripción -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded min-h-[60px]">
+                {{ selectedTask?.tarea.descripcion || 'Sin descripción' }}
+            </p>
+        </div>
+
+        <!-- Fechas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de creación</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Última actualización</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.ultimaActualizacion | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+                <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {{ selectedTask?.tarea.fechaVencimiento ? (selectedTask.tarea.fechaVencimiento | date:'dd/MM/yyyy')
+                    : 'Sin fecha de vencimiento' }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Asignada por -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Asignada por</label>
+            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {{ selectedTask?.tarea.asignadoPor || 'No especificado' }}
+            </p>
+        </div>
+
+        <!-- Estado actual -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Estado actual</label>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" [ngClass]="{
+                        'bg-yellow-100 text-yellow-800': originalTaskData?.tarea.estado === 'pendiente',
+                        'bg-blue-100 text-blue-800': originalTaskData?.tarea.estado === 'en progreso',
+                        'bg-green-100 text-green-800': originalTaskData?.tarea.estado === 'completada'
+                      }">
+                    {{ originalTaskData?.tarea.estado | titlecase }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Cambiar estado -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cambiar estado</label>
+            <select [(ngModel)]="selectedTask.tarea.estado"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option *ngFor="let estado of estados" [value]="estado">
+                    {{ estado | titlecase }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Notas -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+            <textarea [(ngModel)]="selectedTask.tarea.nota" rows="4" maxlength="400"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Agrega notas sobre esta tarea..."></textarea>
+            <p class="text-xs mt-1 font-medium" [ngClass]="{
+                'text-red-600': (selectedTask?.tarea.nota || '').length === 400,
+                'text-gray-500': (selectedTask?.tarea.nota || '').length < 400
+            }">
+                <span *ngIf="(selectedTask?.tarea.nota || '').length === 400">Máximo 400 caracteres</span>
+                <span *ngIf="(selectedTask?.tarea.nota || '').length < 400">{{ (selectedTask?.tarea.nota || '').length }}/400 caracteres</span>
+            </p>
         </div>
     </div>
 </ng-template>

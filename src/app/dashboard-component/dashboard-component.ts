@@ -1,7 +1,8 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
-import { getSessionUser, clearSessionCookie } from '../auth.util';
+import { getSessionUser } from '../auth.util';
+import { AuthService } from '../auth.service';
 import { toast } from 'ngx-sonner';
 import { ZardButtonComponent } from '@shared/components/button/button.component';
 import { ZardAvatarComponent } from '@shared/components/avatar/avatar.component';
@@ -15,10 +16,11 @@ import { ZardSelectItemComponent } from '@shared/components/select/select-item.c
 import { ZardSelectComponent } from '@shared/components/select/select.component';
 import { ZardTooltipModule } from '@shared/components/tooltip/tooltip';
 import { environment } from '../../environments/environment';
+import { HighlightPipe } from '@shared/pipes/highlight.pipe';
 
 @Component({
   selector: 'app-dashboard-component',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardTooltipModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent, ZardSelectComponent, ZardSelectItemComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ZardTooltipModule, ZardButtonComponent, ZardAvatarComponent, ZardDividerComponent, ZardSelectComponent, ZardSelectItemComponent, HighlightPipe],
   templateUrl: './dashboard-component.html',
   styleUrl: './dashboard-component.css'
 })
@@ -47,7 +49,14 @@ export class DashboardComponent implements OnInit {
   @ViewChild('taskDetailsModal', { static: true }) taskDetailsModalTemplate!: TemplateRef<any>;
   @ViewChild('sidebarContent', { static: true }) sidebarContentTemplate!: TemplateRef<any>;
 
-  constructor(private router: Router, private fb: FormBuilder, private alertDialogService: ZardAlertDialogService, private sheetService: ZardSheetService) {
+  constructor(
+    private router: Router, 
+    private fb: FormBuilder, 
+    private alertDialogService: ZardAlertDialogService, 
+    private sheetService: ZardSheetService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {
     const user = getSessionUser();
     this.userName = user ? user.username : '';
     this.name = user ? user.firstName : '';
@@ -208,6 +217,16 @@ export class DashboardComponent implements OnInit {
     return bDate.getTime() - aDate.getTime(); // Newer dates first
   }
 
+  // Check if task is overdue
+  isTaskOverdue(task: any): boolean {
+    if (!task.tarea.fechaVencimiento) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(task.tarea.fechaVencimiento);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate < today;
+  }
+
   // Persist and restore sort selection
   onSortChange(value: string): void {
     this.defaultValue = value;
@@ -255,31 +274,69 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  saveTaskChanges(): void {
-    if (this.taskForm.valid && this.selectedTask) {
-      // Update the task data
-      this.selectedTask.tarea.titulo = this.taskForm.value.titulo;
-      this.selectedTask.tarea.prioridad = this.taskForm.value.prioridad;
-      this.selectedTask.tarea.estado = this.taskForm.value.estado;
-      this.selectedTask.tarea.nota = this.taskForm.value.nota;
-      this.selectedTask.asignacion.esPrioridad = this.taskForm.value.esPrioridad;
-
-      // Update task via API
-      this.updateTask(this.selectedTask);
-    } else {
+  async saveTaskChanges(): Promise<void> {
+    if (!this.taskForm.valid || !this.selectedTask) {
       toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    // CRITICAL: Capture the task reference BEFORE the API call
+    // This prevents race conditions when user opens another modal before this one finishes
+    const taskToUpdate = JSON.parse(JSON.stringify(this.selectedTask));
+    
+    // Update the task data in the captured reference
+    taskToUpdate.tarea.titulo = this.taskForm.value.titulo;
+    taskToUpdate.tarea.prioridad = this.taskForm.value.prioridad;
+    taskToUpdate.tarea.estado = this.taskForm.value.estado;
+    taskToUpdate.tarea.nota = this.taskForm.value.nota;
+    taskToUpdate.asignacion.esPrioridad = this.taskForm.value.esPrioridad;
+
+    const taskId = taskToUpdate.tarea.id;
+
+    // Show loading toast
+    const loadingToast = toast.loading('Guardando cambios...');
+
+    try {
+      console.log('Saving task changes for task ID:', taskId);
+
+      // Update task via API using the captured reference
+      await this.updateTask(taskToUpdate);
+
+      // Update local data after successful API call
+      // Use the captured reference, NOT this.selectedTask
+      this.updateOriginalTaskData(taskToUpdate);
+
+      toast.success('Tarea actualizada correctamente', {
+        id: loadingToast
+      });
+      
+      console.log('Task changes saved successfully for task ID:', taskId);
+    } catch (error) {
+      console.error('Error saving task changes for task ID:', taskId, error);
+      toast.error('Error al guardar los cambios', {
+        id: loadingToast
+      });
     }
   }
 
   // Toggle personal priority (star)
   async togglePersonalPriority(task: any): Promise<void> {
+    if (!task || !task.tarea || !task.tarea.id) {
+      console.error('Invalid task provided to togglePersonalPriority');
+      return;
+    }
+
+    // CRITICAL: Capture the task reference and ID BEFORE the API call
+    // This prevents race conditions when user interacts with multiple tasks rapidly
+    const taskId = task.tarea.id;
+    const taskToUpdate = JSON.parse(JSON.stringify(task));
 
     // Show loading toast
     const loadingToast = toast.loading('Actualizando prioridad...');
 
     try {
       const baseUrl = this.getApiUrl();
-      const response = await fetch(`${baseUrl}/api/tasks/priority/${task.tarea.id}`, {
+      const response = await fetch(`${baseUrl}/api/tasks/priority/${taskId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -289,20 +346,28 @@ export class DashboardComponent implements OnInit {
         })
       });
 
-      const responseData = await response.json();
-
-      if (response.ok) {
-        const isCurrentPriority = responseData?.current;
-        task.asignacion.esPrioridad = isCurrentPriority;
-        const message = isCurrentPriority ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
-        toast.success(message, {
-          id: loadingToast
-        });
-      } else {
+      if (!response.ok) {
         throw new Error('Error al actualizar prioridad');
       }
+
+      const responseData = await response.json();
+      const isCurrentPriority = responseData?.current;
+      
+      console.log('Priority updated successfully for task ID:', taskId, 'New priority:', isCurrentPriority);
+      
+      // Update the captured task data
+      taskToUpdate.asignacion.esPrioridad = isCurrentPriority;
+      
+      // Force update in both arrays to ensure UI refresh
+      // Use the captured reference
+      this.updateLocalTaskContainer(taskToUpdate);
+      
+      const message = isCurrentPriority ? 'Agregada a tus prioridades' : 'Quitada de tus prioridades';
+      toast.success(message, {
+        id: loadingToast
+      });
     } catch (error) {
-      console.error('Error updating priority:', error);
+      console.error('Error updating priority for task ID:', taskId, error);
       toast.error('Error al actualizar la prioridad', {
         id: loadingToast
       });
@@ -337,30 +402,25 @@ export class DashboardComponent implements OnInit {
     console.log('updateTask called with:', task);
     console.log('Making PUT request to:', `${baseUrl}/api/tasks/${task.tarea.id}`);
 
-    try {
-      const response = await fetch(`${baseUrl}/api/tasks/${task.tarea.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(task.tarea)
-      });
+    const response = await fetch(`${baseUrl}/api/tasks/${task.tarea.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(task.tarea)
+    });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
 
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log('API Response data:', responseData);
-        // Don't reload tasks data - we'll update manually
-      } else {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error('Error al actualizar tarea');
-      }
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error('Error al actualizar la tarea');
+    if (response.ok) {
+      const responseData = await response.json();
+      console.log('API Response data:', responseData);
+      // Don't reload tasks data - we'll update manually
+    } else {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error('Error al actualizar tarea');
     }
   }
 
@@ -370,54 +430,118 @@ export class DashboardComponent implements OnInit {
     console.log('Task estado:', this.selectedTask?.tarea?.estado);
     console.log('Task nota:', this.selectedTask?.tarea?.nota);
 
-    if (this.selectedTask) {
-      // Validate notes length
-      if (this.selectedTask.tarea.nota && this.selectedTask.tarea.nota.length > 400) {
-        toast.error('Máximo 400 caracteres en las notas');
-        return;
-      }
+    if (!this.selectedTask) {
+      console.error('No selected task to save');
+      return;
+    }
 
-      // Check if there are changes
-      const hasChanges = this.hasTaskChanges();
-      console.log('Has changes:', hasChanges);
+    // Validate notes length
+    if (this.selectedTask.tarea.nota && this.selectedTask.tarea.nota.length > 400) {
+      toast.error('Máximo 400 caracteres en las notas');
+      return;
+    }
 
-      if (hasChanges) {
-        // Show loading toast
-        const loadingToast = toast.loading('Guardando cambios...');
+    // Check if there are changes
+    const hasChanges = this.hasTaskChanges();
+    console.log('Has changes:', hasChanges);
 
-        try {
-          console.log('Calling updateTask with:', this.selectedTask);
-          await this.updateTask(this.selectedTask);
+    if (!hasChanges) {
+      toast.info('No se detectaron modificaciones');
+      return;
+    }
 
-          // Only update the original task data after successful API call
-          this.updateOriginalTaskData(this.selectedTask);
+    // CRITICAL: Capture the task reference BEFORE the API call
+    // This prevents race conditions when user opens another modal before this one finishes
+    const taskToUpdate = JSON.parse(JSON.stringify(this.selectedTask));
+    const taskId = taskToUpdate.tarea.id;
 
-          // Update toast to success
-          toast.success('Modificaciones guardadas', {
-            id: loadingToast
-          });
-        } catch (error) {
-          console.error('Error saving changes:', error);
-          // Update toast to error
-          toast.error('Error al guardar los cambios', {
-            id: loadingToast
-          });
-        }
-      } else {
-        toast.info('No se detectaron modificaciones');
-      }
+    // Show loading toast
+    const loadingToast = toast.loading('Guardando cambios...');
+
+    try {
+      console.log('Calling updateTask with task ID:', taskId);
+      console.log('Estado before API call:', taskToUpdate.tarea.estado);
+      
+      // First, update the task via API using the captured reference
+      await this.updateTask(taskToUpdate);
+      
+      console.log('API call successful for task ID:', taskId, ', updating local data...');
+      console.log('Estado after API call:', taskToUpdate.tarea.estado);
+
+      // Only update the original task data after successful API call
+      // Use the captured reference, NOT this.selectedTask
+      this.updateOriginalTaskData(taskToUpdate);
+
+      // Update toast to success
+      toast.success('Modificaciones guardadas', {
+        id: loadingToast
+      });
+      
+      console.log('Local data updated successfully for task ID:', taskId);
+    } catch (error) {
+      console.error('Error saving changes for task ID:', taskId, error);
+      // Update toast to error
+      toast.error('Error al guardar los cambios', {
+        id: loadingToast
+      });
+      // Do not update local data if API call failed
     }
   }
 
   // Update original task data in the tasks array
   private updateOriginalTaskData(updatedTask: any): void {
-    if (!this.tasksData || !Array.isArray(this.tasksData)) return;
+    this.updateLocalTaskContainer(updatedTask);
+  }
 
-    const taskIndex = this.tasksData.findIndex((task: any) => task.tarea.id === updatedTask.tarea.id);
-    if (taskIndex !== -1) {
-      // Update the original task with the modified data
-      this.tasksData[taskIndex] = { ...updatedTask };
-      console.log('Original task data updated in array');
+  // Replace the task container in both arrays and trigger change detection
+  private updateLocalTaskContainer(updatedContainer: any): void {
+    if (!updatedContainer || !updatedContainer.tarea) {
+      console.warn('updateLocalTaskContainer called with invalid container');
+      return;
+    }
+
+    let changed = false;
+    
+    // Update tasksData with immutability (deep copy to ensure change detection)
+    if (Array.isArray(this.tasksData)) {
+      const idx = this.tasksData.findIndex((t: any) => t?.tarea?.id === updatedContainer.tarea.id);
+      if (idx !== -1) {
+        // Create a deep copy of the updated container to ensure Angular detects the change
+        const deepCopy = JSON.parse(JSON.stringify(updatedContainer));
+        this.tasksData = [
+          ...this.tasksData.slice(0, idx),
+          deepCopy,
+          ...this.tasksData.slice(idx + 1)
+        ];
+        changed = true;
+        console.log('Task data updated in tasksData at index:', idx, 'New estado:', deepCopy.tarea.estado);
+      } else {
+        console.warn('Task not found in tasksData, id:', updatedContainer.tarea.id);
+      }
+    }
+
+    // Update filteredTasksData with immutability (deep copy to ensure change detection)
+    if (Array.isArray(this.filteredTasksData)) {
+      const fIdx = this.filteredTasksData.findIndex((t: any) => t?.tarea?.id === updatedContainer.tarea.id);
+      if (fIdx !== -1) {
+        // Create a deep copy of the updated container to ensure Angular detects the change
+        const deepCopy = JSON.parse(JSON.stringify(updatedContainer));
+        this.filteredTasksData = [
+          ...this.filteredTasksData.slice(0, fIdx),
+          deepCopy,
+          ...this.filteredTasksData.slice(fIdx + 1)
+        ];
+        changed = true;
+        console.log('Task data updated in filteredTasksData at index:', fIdx, 'New estado:', deepCopy.tarea.estado);
+      } else {
+        console.warn('Task not found in filteredTasksData, id:', updatedContainer.tarea.id);
+      }
+    }
+
+    // Force change detection to ensure UI updates
+    if (changed) {
+      console.log('Forcing change detection...');
+      this.cdr.detectChanges();
     }
   }
 
@@ -440,8 +564,7 @@ export class DashboardComponent implements OnInit {
   }
 
   logout(): void {
-    clearSessionCookie();
-    window.location.href = '/login';
+    this.authService.logout();
   }
 
   openMobileSheet(): void {
